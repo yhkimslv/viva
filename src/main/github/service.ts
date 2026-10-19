@@ -44,7 +44,7 @@ interface GithubErrorResponse {
   }>
 }
 
-function getHeaders(token: string): HeadersInit {
+function getHeaders(token: string): Record<string, string> {
   return {
     Accept: 'application/vnd.github+json',
     Authorization: `Bearer ${token}`,

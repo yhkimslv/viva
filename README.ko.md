@@ -11,19 +11,25 @@ VIVA(Visual Interface for Version Assistance)는 코드를 안전하고 쉽게 �
 
 AI 도구로 코드를 생성하지만 이를 안정적으로 관리할 방법이 필요한 바이브 코더, 디자이너, 학생, 초기 개발자를 위해 만들었습니다.
 
+팀 프로젝트를 시작한다면 [팀 운영 가이드](docs/team-workflow.ko.md)에서 연결, 작업 브랜치, PR 리뷰, 충돌 해결 흐름을 확인하세요.
+
+[팀 사용 점검 결과](docs/superpowers/reports/2026-10-19-team-readiness.md)에는 이번 수정과 배포 전 남은 과제를 정리했습니다.
+
 ---
 
 ## 기능
 
 - **로컬 우선 저장** — GitHub나 AI 설정 없이도 프로젝트 변경 이력을 저장할 수 있습니다
 - **안전한 프로젝트 연결** — 폴더를 연결하기 전에 생성 파일·민감 파일을 확인하고, `git init` 실행 전 사용자에게 묻습니다
+- **앱 안에서 clone** — GitHub HTTPS 주소로 공개·비공개 저장소를 새 폴더에 받고, 진행률과 취소를 제공합니다
+- **리드 대시보드** — 열린 PR, 내 리뷰 요청, CI 상태, 팀 담당 이슈와 최근 실행을 실제 GitHub 데이터로 확인합니다
 - **전체 파일 가시성** — tracked, changed, staged, untracked, clean 파일을 한 패널에서 함께 보여줍니다
 - **Dependency 숨김** — 생성 폴더를 기본으로 숨기고, 필요할 때 **Show deps**로 확인합니다
 - **브랜치 기반 워크플로** — 브랜치 생성·전환·병합·삭제를 지원하며 default branch와 current branch에는 안전장치를 둡니다
 - **선택형 AI 도구** — AI provider 키를 한 번 연결하면 저장 메시지 제안과 수동 AI 도구를 사용할 수 있습니다
 - **언어와 용어 모드 분리** — English/한국어를 독립적으로 전환하고, 초보자 친화 용어와 Git 친화 용어를 별도로 선택합니다
 - **명시적 클라우드 업로드** — private backup repo 또는 팀 협업 대상을 직접 선택하기 전에는 아무것도 push하지 않습니다
-- **업데이트 미리보기** — remote의 새 변경사항을 pull하기 전에 commit과 변경 파일을 먼저 확인합니다
+- **업데이트 미리보기** — remote의 새 변경사항을 pull하기 전에 incoming commit을 먼저 확인합니다
 
 UI에서 shell 명령어를 직접 입력할 필요는 없습니다.
 
@@ -59,6 +65,8 @@ UI에서 shell 명령어를 직접 입력할 필요는 없습니다.
 >
 > Git이 감지되지 않으면 앱이 setup guide를 보여주고, 설치 후 다시 확인할 수 있게 합니다.
 
+현재 개발 브랜치는 macOS 13 이상과 개발용 Node.js 24 LTS를 기준으로 합니다. Electron 44 업데이트는 다음 릴리스부터 적용됩니다.
+
 ---
 
 ## 시작하기
@@ -66,6 +74,10 @@ UI에서 shell 명령어를 직접 입력할 필요는 없습니다.
 ### 1. 프로젝트 연결
 
 sidebar에서 **+ Link a Project**를 클릭합니다.
+
+GitHub에서 처음 받을 프로젝트라면 **GitHub에서 복제**를 선택합니다. `https://github.com/소유자/저장소` 주소와 저장 위치, 새 폴더 이름을 입력한 뒤 **가져오고 열기**를 누릅니다. 공개 저장소는 로그인 없이 사용할 수 있고 비공개 저장소는 먼저 GitHub에 연결해야 합니다. 기존 폴더는 덮어쓰지 않습니다. 하위 모듈은 자동으로 받지 않습니다.
+
+다운로드 중 취소하면 임시 파일을 정리합니다. 최종 폴더로 파일을 옮기는 중 문제가 생기거나 취소되면 불완전한 폴더를 보존하고 복구 경로를 안내합니다. 이 경우 다른 새 폴더 이름으로 다시 시도하거나 남은 폴더를 확인해 직접 정리하세요. 완료된 저장소만 VIVA 프로젝트에 등록합니다.
 
 연결 wizard는 다음을 수행합니다.
 
@@ -130,7 +142,7 @@ project header의 branch pill에서 다음을 할 수 있습니다.
 
 연결된 remote에 새 commit이 있으면 **Get Updates**를 사용합니다.
 
-앱은 pull 전에 incoming commit과 changed file을 미리 보여줍니다. Git conflict가 발생하면 앱이 conflict를 알려주며, 자동으로 해결하려고 하지 않습니다.
+앱은 pull 전에 incoming commit을 미리 보여줍니다. Git conflict가 발생하면 앱이 conflict를 알려주며, 자동으로 해결하려고 하지 않습니다.
 
 ---
 
@@ -208,7 +220,13 @@ local change를 저장한 뒤 **Upload to Cloud**를 사용합니다.
 
 **Get Updates**는 선택된 collaboration branch에서 pull하기 전에 incoming remote commit을 확인하는 기능입니다.
 
-Git이 clean하게 보고할 수 있는 경우 commit과 changed file preview를 보여줍니다. pull이 conflict를 만들 수 있으면 앱은 자동 해결 대신 conflict를 보고합니다.
+앱은 선택한 작업 브랜치의 incoming commit을 미리 보여줍니다. 미리보기가 실패하면 pull하지 않습니다. pull이 conflict를 만들면 앱은 충돌 해결 화면을 보여줍니다.
+
+### 리드 대시보드
+
+프로젝트를 선택하고 sidebar의 **리드 대시보드**를 엽니다. GitHub 연결 후, 선택된 팀 업로드 대상 또는 clone된 프로젝트의 검증된 `origin`에서 현황을 읽어옵니다. 대시보드를 여는 작업은 업로드를 활성화하지 않습니다.
+
+열린 PR, 내 리뷰 요청, 검토 대기와 CI 실패 필터, 팀 전체의 담당 이슈, 최근 워크플로 실행을 볼 수 있습니다. 열린 화면은 5분마다 갱신하며 수동 새로고침도 제공합니다. 권한 부족은 0개와 구분하고, 조회 범위를 넘으면 일부 결과임을 표시합니다. 리뷰 요약은 병합 승인 조건을 보장하지 않으므로 실제 리뷰와 병합은 GitHub에서 진행합니다.
 
 ### Project Settings
 
@@ -319,7 +337,7 @@ AI가 연결되어 있으면 최근 history를 바탕으로 feature-focused summ
 | 데스크톱 셸 | [Electron](https://www.electronjs.org/) |
 | UI | [React](https://react.dev/) + TypeScript |
 | Git 작업 | [simple-git](https://github.com/steveukx/git-js) |
-| 로컬 저장소 | SQLite ([better-sqlite3](https://github.com/WiseLibs/better-sqlite3)) |
+| 로컬 설정 저장 | [electron-store](https://github.com/sindresorhus/electron-store) |
 | AI provider | OpenAI API, Anthropic API |
 | 다국어 | 자체 i18n 레이어 (English + 한국어) |
 | 테스트 | [Vitest](https://vitest.dev/) + Testing Library |

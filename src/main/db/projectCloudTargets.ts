@@ -6,6 +6,8 @@ export interface ProjectCloudTarget {
   backup: { remoteName: string; repoOwner: string; repoName: string; private: true } | null
   collaboration: {
     remoteName: string
+    repoOwner?: string
+    repoName?: string
     branchMode: 'new_branch' | 'existing_branch' | 'danger_default_branch'
     selectedBranch: string | null
   } | null

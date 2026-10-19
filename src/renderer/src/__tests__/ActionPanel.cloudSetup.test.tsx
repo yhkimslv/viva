@@ -39,20 +39,23 @@ describe('ActionPanel cloud setup', () => {
       <ActionPanel
         status={status}
         loading={false}
+        aiLoading={false}
         error={null}
-        messageTemplate=""
+        message=""
         tokenExists={true}
-        deviceFlow={null}
         cloudUploadReady={false}
+        naturalUndoEnabled={false}
+        onMessageChange={vi.fn()}
+        onSuggestMessage={vi.fn()}
+        naturalUndoSuggestion={null}
+        naturalUndoLoading={false}
+        naturalUndoApplying={false}
+        naturalUndoError={null}
         onCommit={vi.fn()}
         onPush={onPush}
         onPull={vi.fn()}
         onClearError={vi.fn()}
-        onConnectGitHub={vi.fn()}
-        onOpenGitHubDocs={vi.fn()}
-        onOpenDevicePage={vi.fn()}
-        onStartDeviceFlow={vi.fn()}
-        onCancelDeviceFlow={vi.fn()}
+        onOpenGitHubConnect={vi.fn()}
         onOpenCloudSetup={onOpenCloudSetup}
       />
     )

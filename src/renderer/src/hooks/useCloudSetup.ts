@@ -54,7 +54,7 @@ export function getCloudStatusLabel(target: ProjectCloudTarget, terms: CloudStat
     return terms.privateBackupReadyLabel
   }
 
-  if (target.mode !== 'collaboration' || !target.collaboration) {
+  if (target.mode !== 'collaboration' || !target.collaboration?.repoOwner || !target.collaboration.repoName) {
     return terms.cloudBackupNotSetUpLabel
   }
 
@@ -268,7 +268,13 @@ export function useCloudSetup(
     selectedRemoteName
   ])
 
-  const cloudUploadReady = target.mode !== 'none'
+  // Older saved targets must be selected once again to verify their repository.
+  // The next Upload click then opens setup instead of repeatedly failing in IPC.
+  const cloudUploadReady = target.mode === 'backup'
+    ? Boolean(target.backup)
+    : target.mode === 'collaboration' && Boolean(
+      target.collaboration?.repoOwner && target.collaboration.repoName && target.collaboration.selectedBranch
+    )
   const cloudStatusLabel = getCloudStatusLabel(target, t)
 
   return {

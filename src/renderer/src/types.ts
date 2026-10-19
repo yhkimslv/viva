@@ -215,6 +215,10 @@ export type GitErrorCode =
   | 'NETWORK_ERROR'
   | 'MERGE_CONFLICT'
   | 'UNCOMMITTED_CHANGES'
+  | 'REMOTE_AHEAD'
+  | 'BRANCH_DIVERGED'
+  | 'BRANCH_MISMATCH'
+  | 'BRANCH_NOT_MERGED'
   | 'BRANCH_EXISTS'
   | 'BRANCH_NOT_FOUND'
   | 'NOTHING_TO_COMMIT'
@@ -328,6 +332,8 @@ export interface ProjectCloudTarget {
   backup: { remoteName: string; repoOwner: string; repoName: string; private: true } | null
   collaboration: {
     remoteName: string
+    repoOwner?: string
+    repoName?: string
     branchMode: CollaborationBranchMode
     selectedBranch: string | null
   } | null

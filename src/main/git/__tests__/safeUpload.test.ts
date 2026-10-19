@@ -28,9 +28,11 @@ describe('safe upload', () => {
       'https://github.com/tony/demo-backup.git'
     ])
     expect(git.raw).toHaveBeenCalledWith([
+      '-c',
+      expect.stringMatching(/^http\.https:\/\/github\.com\/\.extraheader=AUTHORIZATION: basic /),
       'push',
       '-u',
-      'https://oauth2:github_pat_123@github.com/tony/demo-backup.git',
+      'gat-backup',
       'HEAD'
     ])
   })
@@ -38,6 +40,8 @@ describe('safe upload', () => {
   it('creates and pushes a new collaboration branch before returning a PR URL', async () => {
     const git = {
       checkoutLocalBranch: vi.fn(),
+      branchLocal: vi.fn().mockResolvedValue({ all: ['main'] }),
+      raw: vi.fn().mockResolvedValue('ref: refs/heads/main\tHEAD\n'),
       push: vi.fn(),
       getRemotes: vi.fn().mockResolvedValue([
         {

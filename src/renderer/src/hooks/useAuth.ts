@@ -11,6 +11,7 @@ export interface DeviceFlowState {
 
 export function useAuth(): {
   tokenExists: boolean | null
+  connectionRevision: number
   deviceFlow: DeviceFlowState | null
   saveToken: (token: string) => Promise<void>
   clearToken: () => Promise<void>
@@ -18,6 +19,7 @@ export function useAuth(): {
   cancelDeviceFlow: () => Promise<void>
 } {
   const [tokenExists, setTokenExists] = useState<boolean | null>(null)
+  const [connectionRevision, setConnectionRevision] = useState(0)
   const [deviceFlow, setDeviceFlow] = useState<DeviceFlowState | null>(null)
   const { addToast } = useToast()
 
@@ -28,6 +30,7 @@ export function useAuth(): {
   // Listen for device flow results pushed from main process
   useEffect(() => {
     const onSuccess = (): void => {
+      setConnectionRevision((value) => value + 1)
       setTokenExists(true)
       setDeviceFlow(null)
       addToast('GitHub connected successfully', 'success')
@@ -51,6 +54,7 @@ export function useAuth(): {
     async (token: string): Promise<void> => {
       try {
         const result = await invokeDb<GithubTokenValidationResult>('auth:token:set', token)
+        setConnectionRevision((value) => value + 1)
         setTokenExists(true)
         addToast(
           result.accountLogin
@@ -72,6 +76,7 @@ export function useAuth(): {
 
   const clearToken = useCallback(async (): Promise<void> => {
     await invokeDb('auth:token:clear')
+    setConnectionRevision((value) => value + 1)
     setTokenExists(false)
     addToast('GitHub disconnected', 'info')
   }, [addToast])
@@ -90,5 +95,5 @@ export function useAuth(): {
     setDeviceFlow(null)
   }, [])
 
-  return { tokenExists, deviceFlow, saveToken, clearToken, startDeviceFlow, cancelDeviceFlow }
+  return { tokenExists, connectionRevision, deviceFlow, saveToken, clearToken, startDeviceFlow, cancelDeviceFlow }
 }

@@ -71,7 +71,6 @@ function renderActionPanel(): void {
       error={null}
       message=""
       tokenExists={true}
-      deviceFlow={null}
       cloudUploadReady={true}
       cloudStatusLabel="Team upload ready: origin"
       uploadHandoff={pushResult}
@@ -87,11 +86,7 @@ function renderActionPanel(): void {
       onPull={vi.fn()}
       onOpenCloudSetup={vi.fn()}
       onClearError={vi.fn()}
-      onConnectGitHub={vi.fn()}
-      onOpenGitHubDocs={vi.fn()}
-      onOpenDevicePage={vi.fn()}
-      onStartDeviceFlow={vi.fn()}
-      onCancelDeviceFlow={vi.fn()}
+      onOpenGitHubConnect={vi.fn()}
     />
   )
 }

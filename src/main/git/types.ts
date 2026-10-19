@@ -103,6 +103,8 @@ export interface PushCollaborationTargetInput {
   branchName: string
   dangerConfirmed?: boolean
   token?: string
+  repoOwner?: string
+  repoName?: string
 }
 
 export type PushConfiguredTargetInput = PushBackupTargetInput | PushCollaborationTargetInput
@@ -117,6 +119,8 @@ export interface PullConfiguredTargetInput {
   remoteName: string
   branchName: string
   token?: string
+  repoOwner?: string
+  repoName?: string
 }
 
 export interface IncomingCommitInfo {
@@ -153,6 +157,8 @@ export type GitErrorCode =
   | 'UNCOMMITTED_CHANGES'
   | 'REMOTE_AHEAD'
   | 'BRANCH_DIVERGED'
+  | 'BRANCH_MISMATCH'
+  | 'BRANCH_NOT_MERGED'
   | 'INVALID_BRANCH_NAME'
   | 'BRANCH_EXISTS'
   | 'BRANCH_NOT_FOUND'

@@ -22,6 +22,8 @@ describe('cloud upload status label', () => {
           backup: null,
           collaboration: {
             remoteName: 'origin',
+            repoOwner: 'team',
+            repoName: 'project',
             branchMode: 'new_branch',
             selectedBranch: 'gat/demo-update'
           }
@@ -29,5 +31,12 @@ describe('cloud upload status label', () => {
         terms
       )
     ).toBe('Team upload: review branch gat/demo-update on origin. main is not updated.')
+  })
+
+  it('marks an older team target for setup again until its repository is verified', () => {
+    expect(getCloudStatusLabel({
+      mode: 'collaboration', backup: null,
+      collaboration: { remoteName: 'origin', branchMode: 'existing_branch', selectedBranch: 'feature/work' }
+    }, terms)).toBe(terms.cloudBackupNotSetUpLabel)
   })
 })

@@ -11,12 +11,16 @@ VIVA (Visual Interface for Version Assistance) is a local-first desktop app that
 
 Built for vibe coders, designers, students, and early-stage developers who generate code with AI tools but need a reliable way to manage it.
 
+For team projects, see the [team workflow guide in Korean](docs/team-workflow.ko.md) and the [team readiness review](docs/superpowers/reports/2026-10-19-team-readiness.md).
+
 ---
 
 ## Features
 
 - **Local-first saves** — record project snapshots without requiring GitHub or AI setup
 - **Safe project linking** — inspect a folder before linking, warn about generated or sensitive files, and ask before running `git init`
+- **Clone in the app** — download a public or private GitHub HTTPS repository into a new folder, with progress and cancellation
+- **Lead dashboard** — view open PRs, your review requests, CI status, assigned team issues, and recent workflow runs from GitHub
 - **Full file visibility** — show tracked, changed, staged, untracked, and clean files together in one panel
 - **Dependency hiding** — keep generated folders collapsed by default; reveal with **Show deps** when needed
 - **Branch-aware workflow** — create, switch, merge, and delete local branches with guardrails on default and current branches
@@ -59,6 +63,8 @@ No shell commands are required in the UI.
 >
 > If Git is not detected, the app shows a setup guide and lets you retry after installation.
 
+The current development branch targets macOS 13 or newer and Node.js 24 LTS for development. The Electron 44 update will be included in the next release.
+
 ---
 
 ## Getting Started
@@ -66,6 +72,10 @@ No shell commands are required in the UI.
 ### 1. Link a project
 
 Click **+ Link a Project** in the sidebar.
+
+For a repository on GitHub, choose **Clone from GitHub**, enter an HTTPS repository URL, choose the parent folder and a new directory name, then select **Clone and open**. Public repositories need no login; private repositories use your connected GitHub account. Existing folders are preserved and submodules are not downloaded automatically.
+
+Cancelling a download removes owned temporary files. If placing the downloaded files into the final folder fails or is cancelled, the partial folder is preserved with a recovery path. Review it or choose a different new directory before retrying. Only a complete clone is registered as a project.
 
 The link wizard:
 
@@ -130,7 +140,7 @@ For team upload, the recommended path is a new work branch such as `gat/my-updat
 
 Use **Get Updates** when the connected remote has new commits.
 
-The app previews the incoming commits and changed files before pulling. Pulling can still fail if Git reports a conflict; in that case the app shows the conflict instead of trying to auto-resolve it.
+The app previews incoming commits before pulling. Pulling can still fail if Git reports a conflict; in that case the app shows the conflict instead of trying to auto-resolve it.
 
 ---
 
@@ -208,7 +218,13 @@ The app does not automatically reuse `origin` for upload. A cloud target must be
 
 Use **Get Updates** to inspect incoming remote commits before pulling from the selected collaboration branch.
 
-The app previews commits and changed files when Git can report them cleanly. If pulling would create a conflict, the app reports the conflict instead of attempting automatic resolution.
+The app previews incoming commits on the selected work branch. If the preview fails, it does not pull. If pulling creates a conflict, the app opens the conflict resolver.
+
+### Lead dashboard
+
+Select a project and open **Lead dashboard** in the sidebar. After connecting GitHub, the app reads the configured team repository or a verified GitHub `origin` from a cloned project. Viewing the dashboard does not enable uploads.
+
+View open PRs, individual review requests, review and failing-CI filters, assigned issues across the team, and recent workflow runs. The open view refreshes every five minutes and supports manual refresh. Missing permission is shown separately from zero results, and truncated lists are identified. Review summaries do not establish merge eligibility; review and merge on GitHub.
 
 ### Project Settings
 
@@ -319,7 +335,7 @@ When AI is connected, produces a feature-focused summary from recent history. Wh
 | Desktop shell | [Electron](https://www.electronjs.org/) |
 | UI | [React](https://react.dev/) + TypeScript |
 | Git operations | [simple-git](https://github.com/steveukx/git-js) |
-| Local storage | SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) |
+| Local settings storage | [electron-store](https://github.com/sindresorhus/electron-store) |
 | AI providers | OpenAI API, Anthropic API |
 | i18n | Custom i18n layer (English + Korean) |
 | Tests | [Vitest](https://vitest.dev/) + Testing Library |

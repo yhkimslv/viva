@@ -27,7 +27,7 @@ describe('useFileInsight', () => {
       useFileInsight({
         activeProjectId: 'project-1',
         enabled: true,
-        invokeDb
+        invokeDb: invokeDb as Parameters<typeof useFileInsight>[0]['invokeDb']
       })
     )
 

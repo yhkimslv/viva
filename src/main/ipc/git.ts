@@ -1,5 +1,5 @@
-import { ipcMain } from 'electron'
-import simpleGit from 'simple-git'
+import { ipcMain, type IpcMainInvokeEvent } from 'electron'
+import { simpleGit } from 'simple-git'
 import { getGitService, removeGitService } from '../git'
 import { addAiCommitSummary, AiCommitChangeKind } from '../db/aiSummaries'
 import { getCachedStatus, setCachedStatus, invalidateCache } from '../db/statusCache'
@@ -21,6 +21,38 @@ interface CommitAiMetadata {
   user_visible?: boolean
   areas?: string[]
   keywords?: string[]
+}
+
+const projectOperations = new Map<string, Promise<void>>()
+const readOnlyChannels = new Set([
+  'git:status', 'git:files:tracked', 'git:branches', 'git:branch:default',
+  'git:conflict:versions', 'git:log', 'git:timeline', 'git:restore:preview'
+])
+
+/** Keep each multi-command operation and its target metadata in one project transaction. */
+function handleProject<Args extends unknown[], Result>(
+  channel: string,
+  handler: (event: IpcMainInvokeEvent, projectId: string, ...args: Args) => Result | Promise<Result>
+): void {
+  ipcMain.handle(channel, (event, projectId: string, ...args: Args) => {
+    const previous = projectOperations.get(projectId) ?? Promise.resolve()
+    const changesStatus = !readOnlyChannels.has(channel)
+    const operation = previous.then(async () => {
+      if (changesStatus) invalidateCache(projectId)
+      try {
+        return await handler(event, projectId, ...args)
+      } finally {
+        if (changesStatus) invalidateCache(projectId)
+      }
+    })
+    // A failed command must release the queue for recovery or the next status read.
+    const settled = operation.then(() => undefined, () => undefined)
+    projectOperations.set(projectId, settled)
+    void settled.then(() => {
+      if (projectOperations.get(projectId) === settled) projectOperations.delete(projectId)
+    })
+    return operation
+  })
 }
 
 // Wrap a git call so IPC errors are serialisable plain objects (Errors don't
@@ -62,6 +94,9 @@ function getPushTarget(project_id: string, token?: string, options?: PushToCloud
   }
 
   if (target.mode === 'collaboration' && target.collaboration) {
+    if (!target.collaboration.repoOwner || !target.collaboration.repoName) {
+      throw noRemoteError('Choose the team upload target again so VIVA can verify the repository.')
+    }
     if (!target.collaboration.selectedBranch) {
       throw missingBranchError('Choose a work branch before uploading to the team repository.')
     }
@@ -71,6 +106,8 @@ function getPushTarget(project_id: string, token?: string, options?: PushToCloud
       remoteName: target.collaboration.remoteName,
       branchMode: target.collaboration.branchMode,
       branchName: target.collaboration.selectedBranch,
+      repoOwner: target.collaboration.repoOwner,
+      repoName: target.collaboration.repoName,
       dangerConfirmed: options?.dangerConfirmed,
       token
     }
@@ -83,9 +120,14 @@ function getPullTarget(project_id: string, token?: string): PullConfiguredTarget
   const target = getProjectCloudTarget(project_id)
 
   if (target.mode === 'collaboration' && target.collaboration?.selectedBranch) {
+    if (!target.collaboration.repoOwner || !target.collaboration.repoName) {
+      throw noRemoteError('Choose the team upload target again so VIVA can verify the repository.')
+    }
     return {
       remoteName: target.collaboration.remoteName,
       branchName: target.collaboration.selectedBranch,
+      repoOwner: target.collaboration.repoOwner,
+      repoName: target.collaboration.repoName,
       token
     }
   }
@@ -106,7 +148,7 @@ export function registerGitHandlers(): void {
   })
 
   // Initialize a git repo in the project's folder
-  ipcMain.handle('git:init', async (_event, project_id: string) => {
+  handleProject('git:init', async (_event, project_id: string) => {
     const result = await run(() => getGitService(project_id).init())
     // Recreate the service so subsequent calls see the new repo
     removeGitService(project_id)
@@ -124,7 +166,7 @@ export function registerGitHandlers(): void {
   })
 
   // Status — cache-first; populates statusCache on miss
-  ipcMain.handle('git:status', async (_event, project_id: string) => {
+  handleProject('git:status', async (_event, project_id: string) => {
     const cached = getCachedStatus(project_id)
     if (cached) return { data: cached }
 
@@ -135,19 +177,19 @@ export function registerGitHandlers(): void {
     })
   })
 
-  ipcMain.handle('git:stage', async (_event, project_id: string, paths: string[]) => {
+  handleProject('git:stage', async (_event, project_id: string, paths: string[]) => {
     const result = await run(() => getGitService(project_id).stage(paths))
     invalidateCache(project_id)
     return result
   })
 
-  ipcMain.handle('git:unstage', async (_event, project_id: string, paths: string[]) => {
+  handleProject('git:unstage', async (_event, project_id: string, paths: string[]) => {
     const result = await run(() => getGitService(project_id).unstage(paths))
     invalidateCache(project_id)
     return result
   })
 
-  ipcMain.handle(
+  handleProject(
     'git:commit',
     async (_event, project_id: string, message: string, aiMetadata?: CommitAiMetadata) => {
       const result = await run(async () => {
@@ -174,16 +216,25 @@ export function registerGitHandlers(): void {
     }
   )
 
-  ipcMain.handle('git:push', async (_event, project_id: string, options?: PushToCloudOptions) => {
+  handleProject('git:push', async (_event, project_id: string, options?: PushToCloudOptions) => {
     const token = getGithubToken() ?? undefined
-    const result = await run(() =>
-      getGitService(project_id).pushConfiguredTarget(getPushTarget(project_id, token, options))
-    )
+    const result = await run(async () => {
+      const uploaded = await getGitService(project_id).pushConfiguredTarget(getPushTarget(project_id, token, options))
+      const target = getProjectCloudTarget(project_id)
+      if (target.mode === 'collaboration' && target.collaboration?.selectedBranch === uploaded.branchName &&
+        target.collaboration.branchMode === 'new_branch') {
+        setProjectCloudTarget(project_id, {
+          ...target,
+          collaboration: { ...target.collaboration, branchMode: 'existing_branch' }
+        })
+      }
+      return uploaded
+    })
     invalidateCache(project_id)
     return result
   })
 
-  ipcMain.handle('git:pull', async (_event, project_id: string) => {
+  handleProject('git:pull', async (_event, project_id: string) => {
     const token = getGithubToken() ?? undefined
     const result = await run(() =>
       getGitService(project_id).pullConfiguredTarget(getPullTarget(project_id, token))
@@ -192,7 +243,7 @@ export function registerGitHandlers(): void {
     return result
   })
 
-  ipcMain.handle('git:pull:preview', async (_event, project_id: string, limit?: number) => {
+  handleProject('git:pull:preview', async (_event, project_id: string, limit?: number) => {
     const token = getGithubToken() ?? undefined
     const result = await run(() =>
       getGitService(project_id).previewPullUpdates(getPullTarget(project_id, token), limit)
@@ -201,19 +252,19 @@ export function registerGitHandlers(): void {
     return result
   })
 
-  ipcMain.handle('git:files:tracked', (_event, project_id: string) =>
+  handleProject('git:files:tracked', (_event, project_id: string) =>
     run(() => getGitService(project_id).listTrackedFiles())
   )
 
-  ipcMain.handle('git:branches', (_event, project_id: string) =>
+  handleProject('git:branches', (_event, project_id: string) =>
     run(() => getGitService(project_id).getBranches())
   )
 
-  ipcMain.handle('git:branch:default', (_event, project_id: string, remoteName?: string) =>
-    run(() => getGitService(project_id).getDefaultBranch(remoteName ?? 'origin'))
+  handleProject('git:branch:default', (_event, project_id: string, remoteName?: string) =>
+    run(() => getGitService(project_id).getDefaultBranch(remoteName ?? 'origin', getGithubToken() ?? undefined))
   )
 
-  ipcMain.handle('git:branch:create', (_event, project_id: string, name: string) =>
+  handleProject('git:branch:create', (_event, project_id: string, name: string) =>
     (async () => {
       const token = getGithubToken() ?? undefined
       const target = getProjectCloudTarget(project_id)
@@ -226,7 +277,9 @@ export function registerGitHandlers(): void {
         getGitService(project_id).createBranch(name, {
           remoteName,
           token,
-          publishRemote: true
+          publishRemote: target.mode === 'collaboration' && Boolean(target.collaboration?.repoOwner && target.collaboration.repoName),
+          repoOwner: target.collaboration?.repoOwner,
+          repoName: target.collaboration?.repoName
         })
       )
 
@@ -235,7 +288,8 @@ export function registerGitHandlers(): void {
           ...target,
           collaboration: {
             ...target.collaboration,
-            selectedBranch: name
+            selectedBranch: name,
+            branchMode: 'existing_branch'
           }
         })
       }
@@ -245,17 +299,22 @@ export function registerGitHandlers(): void {
     })()
   )
 
-  ipcMain.handle('git:branch:switch', (_event, project_id: string, name: string) =>
+  handleProject('git:branch:switch', (_event, project_id: string, name: string) =>
     (async () => {
       const target = getProjectCloudTarget(project_id)
       const result = await run(() => getGitService(project_id).switchBranch(name))
 
       if ('data' in result && target.mode === 'collaboration' && target.collaboration) {
+        const defaultBranch = await getGitService(project_id).getDefaultBranch(
+          target.collaboration.remoteName, getGithubToken() ?? undefined
+        )
         setProjectCloudTarget(project_id, {
           ...target,
           collaboration: {
             ...target.collaboration,
-            selectedBranch: name
+            selectedBranch: name,
+            branchMode: name === defaultBranch || (!defaultBranch && ['main', 'master'].includes(name))
+              ? 'danger_default_branch' : 'existing_branch'
           }
         })
       }
@@ -265,13 +324,13 @@ export function registerGitHandlers(): void {
     })()
   )
 
-  ipcMain.handle('git:branch:merge', async (_event, project_id: string, name: string) => {
+  handleProject('git:branch:merge', async (_event, project_id: string, name: string) => {
     const result = await run(() => getGitService(project_id).mergeBranch(name))
     invalidateCache(project_id)
     return result
   })
 
-  ipcMain.handle('git:branch:delete', (_event, project_id: string, name: string) =>
+  handleProject('git:branch:delete', (_event, project_id: string, name: string) =>
     (async () => {
       const token = getGithubToken() ?? undefined
       const target = getProjectCloudTarget(project_id)
@@ -284,7 +343,9 @@ export function registerGitHandlers(): void {
         getGitService(project_id).deleteBranch(name, {
           remoteName,
           token,
-          deleteRemote: true
+          deleteRemote: target.mode === 'collaboration' && Boolean(target.collaboration?.repoOwner && target.collaboration.repoName),
+          repoOwner: target.collaboration?.repoOwner,
+          repoName: target.collaboration?.repoName
         })
       )
 
@@ -308,54 +369,55 @@ export function registerGitHandlers(): void {
     })()
   )
 
-  ipcMain.handle('git:untracked:delete', async (_event, project_id: string, paths: string[]) => {
+  handleProject('git:untracked:delete', async (_event, project_id: string, paths: string[]) => {
     const result = await run(() => getGitService(project_id).deleteUntracked(paths))
     invalidateCache(project_id)
     return result
   })
 
-  ipcMain.handle('git:revert', (_event, project_id: string, path: string) =>
+  handleProject('git:revert', (_event, project_id: string, path: string) =>
     run(() => getGitService(project_id).revertFile(path))
   )
 
-  ipcMain.handle('git:conflict:versions', (_event, project_id: string, filePath: string) =>
+  handleProject('git:conflict:versions', (_event, project_id: string, filePath: string) =>
     run(() => getGitService(project_id).getConflictVersions(filePath))
   )
 
-  ipcMain.handle(
+  handleProject(
     'git:conflict:resolve',
     (_event, project_id: string, filePath: string, strategy: 'ours' | 'theirs') => {
-      const result = run(() => getGitService(project_id).resolveConflict(filePath, strategy))
-      invalidateCache(project_id)
-      return result
+      return run(async () => {
+        await getGitService(project_id).resolveConflict(filePath, strategy)
+        invalidateCache(project_id)
+      })
     }
   )
 
-  ipcMain.handle('git:conflict:abort', async (_event, project_id: string) => {
+  handleProject('git:conflict:abort', async (_event, project_id: string) => {
     const result = await run(() => getGitService(project_id).abortMerge())
     invalidateCache(project_id)
     return result
   })
 
-  ipcMain.handle(
+  handleProject(
     'git:log',
     (_event, project_id: string, limit?: number) =>
       run(() => getGitService(project_id).getLog(limit))
   )
 
-  ipcMain.handle(
+  handleProject(
     'git:timeline',
     (_event, project_id: string, limit?: number) =>
       run(() => getGitService(project_id).getTimeline(limit))
   )
 
-  ipcMain.handle(
+  handleProject(
     'git:restore:preview',
     (_event, project_id: string, commitHash: string) =>
       run(() => getGitService(project_id).getRestorePreview(commitHash))
   )
 
-  ipcMain.handle(
+  handleProject(
     'git:restore:apply',
     async (_event, project_id: string, commitHash: string) => {
       const result = await run(() => getGitService(project_id).restoreToCommit(commitHash))
@@ -365,7 +427,7 @@ export function registerGitHandlers(): void {
   )
 
   // Clean up service instance when a project is removed
-  ipcMain.handle('git:service:remove', (_event, project_id: string) => {
+  handleProject('git:service:remove', (_event, project_id: string) => {
     removeGitService(project_id)
   })
 }

@@ -35,9 +35,10 @@ describe('useNaturalUndo', () => {
     const { result } = renderHook(() =>
       useNaturalUndo({
         activeProjectId: 'project-1',
-        invokeDb,
+        invokeDb: invokeDb as Parameters<typeof useNaturalUndo>[0]['invokeDb'],
         invokeGit: vi.fn(),
-        refresh: vi.fn(),
+        refreshStatus: vi.fn(),
+        refreshBranches: vi.fn(),
         addToast: vi.fn()
       })
     )

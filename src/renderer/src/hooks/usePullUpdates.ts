@@ -8,7 +8,7 @@ interface UsePullUpdatesOptions {
   enabled: boolean
   currentBranch: string | null
   invokeGit: InvokeGit
-  pull: () => Promise<void>
+  pull: () => Promise<unknown>
   refreshStatus: () => Promise<void>
 }
 
@@ -44,17 +44,40 @@ export function usePullUpdates({
   const [error, setError] = useState<string | null>(null)
   const [showDialog, setShowDialog] = useState(false)
   const lastShownRef = useRef<Record<string, string>>({})
+  const contextKey = JSON.stringify([activeProjectId, currentBranch])
+  const contextRef = useRef(contextKey)
+  contextRef.current = contextKey
+  const requestRef = useRef(0)
+  const previewContextRef = useRef<string | null>(null)
+  const pullingRef = useRef(false)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      requestRef.current += 1
+    }
+  }, [])
 
   const reset = useCallback((): void => {
+    requestRef.current += 1
+    previewContextRef.current = null
     setPreview(null)
     setError(null)
     setLoading(false)
     setShowDialog(false)
   }, [])
 
+  useEffect(reset, [contextKey, reset])
+
   const loadPreview = useCallback(
     async (refreshAfter = false): Promise<PullUpdatesPreview | null> => {
-      if (!activeProjectId) return null
+      if (!activeProjectId || !mountedRef.current || contextRef.current !== contextKey) return null
+
+      const request = ++requestRef.current
+      const isCurrent = (): boolean =>
+        mountedRef.current && contextRef.current === contextKey && requestRef.current === request
 
       setLoading(true)
       setError(null)
@@ -65,40 +88,54 @@ export function usePullUpdates({
           activeProjectId,
           20
         )
+        if (!isCurrent()) return null
+        previewContextRef.current = contextKey
         setPreview(nextPreview)
         if (refreshAfter) {
           await refreshStatus()
         }
+        if (!isCurrent()) return null
         return nextPreview
       } catch (caught) {
+        if (!isCurrent()) return null
+        previewContextRef.current = null
+        setPreview(null)
         const message =
           (caught as { message?: string })?.message ?? 'Could not load incoming updates.'
         setError(message)
         return null
       } finally {
-        setLoading(false)
+        if (isCurrent()) setLoading(false)
       }
     },
-    [activeProjectId, invokeGit, refreshStatus]
+    [activeProjectId, contextKey, invokeGit, refreshStatus]
   )
 
   const requestPull = useCallback(async (): Promise<void> => {
     const nextPreview = await loadPreview(true)
+    if (!mountedRef.current || contextRef.current !== contextKey || !nextPreview) return
     if (nextPreview && nextPreview.behind_count > 0) {
-      if (activeProjectId) {
-        lastShownRef.current[activeProjectId] = getPreviewFingerprint(nextPreview)
-      }
+      lastShownRef.current[contextKey] = getPreviewFingerprint(nextPreview)
       setShowDialog(true)
       return
     }
 
-    await pull()
-  }, [activeProjectId, loadPreview, pull])
+  }, [contextKey, loadPreview])
 
   const confirmPull = useCallback((): void => {
+    if (
+      pullingRef.current || !showDialog || !preview || preview.behind_count <= 0 ||
+      previewContextRef.current !== contextKey || contextRef.current !== contextKey
+    ) return
+    pullingRef.current = true
     setShowDialog(false)
-    void pull()
-  }, [pull])
+    void Promise.resolve().then(pull).catch((caught) => {
+      if (!mountedRef.current || contextRef.current !== contextKey) return
+      setError((caught as { message?: string })?.message ?? 'Could not get incoming updates.')
+    }).finally(() => {
+      pullingRef.current = false
+    })
+  }, [contextKey, preview, pull, showDialog])
 
   const close = useCallback((): void => {
     setShowDialog(false)
@@ -111,16 +148,16 @@ export function usePullUpdates({
     let checking = false
 
     const checkIncomingUpdates = async (): Promise<void> => {
-      if (checking || cancelled || showDialog) return
+      if (checking || cancelled || showDialog || pullingRef.current) return
       checking = true
       try {
         const nextPreview = await loadPreview()
         if (cancelled || !nextPreview || nextPreview.behind_count <= 0) return
 
         const fingerprint = getPreviewFingerprint(nextPreview)
-        if (lastShownRef.current[activeProjectId] === fingerprint) return
+        if (lastShownRef.current[contextKey] === fingerprint) return
 
-        lastShownRef.current[activeProjectId] = fingerprint
+        lastShownRef.current[contextKey] = fingerprint
         setShowDialog(true)
       } finally {
         checking = false
@@ -136,7 +173,7 @@ export function usePullUpdates({
       cancelled = true
       window.clearInterval(interval)
     }
-  }, [activeProjectId, currentBranch, enabled, loadPreview, showDialog])
+  }, [activeProjectId, contextKey, currentBranch, enabled, loadPreview, showDialog])
 
   return {
     preview,

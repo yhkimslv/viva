@@ -53,6 +53,10 @@ const USER_MESSAGES: Record<GitErrorCode, string> = {
     'The cloud branch has newer work. Get updates first or upload to a new branch; this app will not force push.',
   BRANCH_DIVERGED:
     'Your branch and the cloud branch both changed. Get updates first, resolve the mismatch, or upload to a new branch; this app will not force push.',
+  BRANCH_MISMATCH:
+    'The current branch changed. Switch to the configured upload branch or choose the upload target again.',
+  BRANCH_NOT_MERGED:
+    'Merge this branch into the current branch before deleting it. Its saved work is still separate.',
   INVALID_BRANCH_NAME: 'Choose a valid branch name before continuing.',
   BRANCH_EXISTS:
     'A branch with that name already exists. Use a different new branch name or choose existing branch mode.',
@@ -63,10 +67,14 @@ const USER_MESSAGES: Record<GitErrorCode, string> = {
 }
 
 export function mapGitError(err: unknown): GitError {
-  const raw =
+  const original =
     (err as RawError)?.git?.raw ??
     (err as RawError)?.message ??
     String(err)
+  const raw = original
+    .replace(/(https?:\/\/)[^\s/@]+(?::[^\s/@]*)?@/gi, '$1[redacted]@')
+    .replace(/(authorization:\s*(?:basic|bearer)\s+)[A-Za-z0-9+/_=.-]+/gi, '$1[redacted]')
+    .replace(/\b(?:github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9_]+)\b/g, '[redacted]')
 
   const code = detectCode(raw)
   return {

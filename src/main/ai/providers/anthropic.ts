@@ -21,7 +21,7 @@ interface AnthropicMessagesResponse {
   }>
 }
 
-function getHeaders(apiKey: string): HeadersInit {
+function getHeaders(apiKey: string): Record<string, string> {
   return {
     'content-type': 'application/json',
     'x-api-key': apiKey,

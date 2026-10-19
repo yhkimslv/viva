@@ -8,6 +8,8 @@ import { registerProjectSetupHandlers } from './projectSetup'
 import { registerCloudHandlers } from './cloud'
 import { registerAiHandlers } from './ai'
 import { registerWeeklyReportHandlers } from './weekly'
+import { registerCloneHandlers } from './clone'
+import { registerDashboardHandlers } from './dashboard'
 
 export function registerIpcHandlers(): void {
   registerProjectsHandlers()
@@ -20,4 +22,6 @@ export function registerIpcHandlers(): void {
   registerCloudHandlers()
   registerAiHandlers()
   registerWeeklyReportHandlers()
+  registerCloneHandlers()
+  registerDashboardHandlers()
 }

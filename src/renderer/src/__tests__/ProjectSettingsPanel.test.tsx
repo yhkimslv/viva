@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ProjectSettingsPanel } from '../components/ProjectSettingsPanel/ProjectSettingsPanel'
+import { ProjectAiSettings } from '../types'
+
+afterEach(cleanup)
 
 vi.mock('../hooks/useTerms', () => ({
   useTerms: () => ({
@@ -15,7 +18,9 @@ vi.mock('../hooks/useTerms', () => ({
     aiConnectProviderFirstLabel: 'AI provider를 먼저 연결하세요',
     modelLabel: '모델',
     noneSelectedLabel: '선택 안 됨',
-    diffConsentLabel: 'diff 동의',
+    diffConsentLabel: 'AI 데이터 공유',
+    allowAiDataSharingLabel: '이 프로젝트의 AI 데이터 공유 허용',
+    aiDataSharingDescription: '관련 diff, 파일 일부, 충돌 내용, 파일 경로, 커밋 기록을 AI provider로 전송합니다.',
     diffConsentGrantedLabel: '허용됨',
     diffConsentNotGrantedLabel: '아직 허용 안 됨',
     openConnectAiBtn: 'AI 연결 열기',
@@ -36,6 +41,29 @@ vi.mock('../hooks/useTerms', () => ({
   })
 }))
 
+function renderSettings(aiSettings: Partial<ProjectAiSettings> = {}, connected = true) {
+  const onAiChange = vi.fn()
+  render(
+    <ProjectSettingsPanel
+      aiSettings={{
+        auto_save_message_enabled: false,
+        ai_diff_consent_granted: false,
+        ai_diff_consent_granted_at: null,
+        ...aiSettings
+      }}
+      aiConnectionStatus={connected ? 'connected' : 'disconnected'}
+      selectedModel={connected ? 'test-model' : null}
+      cloudTarget={{ mode: 'none', backup: null, collaboration: null }}
+      protectedBranch="main"
+      onAiChange={onAiChange}
+      onOpenAiConnection={vi.fn()}
+      onOpenCloudSetup={vi.fn()}
+      onClose={vi.fn()}
+    />
+  )
+  return onAiChange
+}
+
 describe('ProjectSettingsPanel', () => {
   it('shows AI and cloud state together', () => {
     render(
@@ -47,6 +75,7 @@ describe('ProjectSettingsPanel', () => {
         }}
         aiConnectionStatus="connected"
         selectedModel="gpt-4.1-mini"
+        protectedBranch="main"
         cloudTarget={{
           mode: 'backup',
           backup: {
@@ -66,5 +95,32 @@ describe('ProjectSettingsPanel', () => {
 
     expect(screen.getByText(/AI 자동 저장 메시지 사용/i)).toBeTruthy()
     expect(screen.getByText(/private 백업 준비됨/i)).toBeTruthy()
+  })
+})
+
+describe('project AI sharing control', () => {
+  it('grants consent for manual tools without enabling auto-save', () => {
+    const onAiChange = renderSettings()
+
+    fireEvent.click(screen.getByRole('checkbox', { name: '이 프로젝트의 AI 데이터 공유 허용' }))
+
+    expect(onAiChange).toHaveBeenCalledWith({ ai_diff_consent_granted: true })
+    expect(screen.getByText(/파일 일부, 충돌 내용, 파일 경로, 커밋 기록/)).toBeTruthy()
+  })
+
+  it('revokes consent and disables auto-save even after disconnecting the provider', () => {
+    const onAiChange = renderSettings({
+      auto_save_message_enabled: true,
+      ai_diff_consent_granted: true
+    }, false)
+    const consent = screen.getByRole('checkbox', { name: '이 프로젝트의 AI 데이터 공유 허용' })
+
+    expect(consent.hasAttribute('disabled')).toBe(false)
+    fireEvent.click(consent)
+
+    expect(onAiChange).toHaveBeenCalledWith({
+      ai_diff_consent_granted: false,
+      auto_save_message_enabled: false
+    })
   })
 })

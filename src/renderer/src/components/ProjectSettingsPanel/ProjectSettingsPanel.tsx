@@ -67,6 +67,24 @@ export function ProjectSettingsPanel({
         <label className={styles.toggleRow}>
           <input
             type="checkbox"
+            checked={aiSettings.ai_diff_consent_granted}
+            aria-describedby="project-ai-sharing-description"
+            onChange={(event) => {
+              const granted = event.target.checked
+              onAiChange({
+                ai_diff_consent_granted: granted,
+                ...(!granted ? { auto_save_message_enabled: false } : {})
+              })
+            }}
+          />
+          <span>{t.allowAiDataSharingLabel}</span>
+        </label>
+        <p id="project-ai-sharing-description" className={styles.description}>
+          {t.aiDataSharingDescription}
+        </p>
+        <label className={styles.toggleRow}>
+          <input
+            type="checkbox"
             checked={aiSettings.auto_save_message_enabled}
             disabled={!connected}
             onChange={(event) => onAiChange({ auto_save_message_enabled: event.target.checked })}

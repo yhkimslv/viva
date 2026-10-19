@@ -20,8 +20,10 @@ interface TokenPollResponse {
 }
 
 let pollTimer: ReturnType<typeof setTimeout> | null = null
+let flowGeneration = 0
 
 function cancelPolling(): void {
+  flowGeneration += 1
   if (pollTimer) {
     clearTimeout(pollTimer)
     pollTimer = null
@@ -37,9 +39,12 @@ function notifyRenderer(channel: string, payload?: unknown): void {
 async function pollForToken(
   device_code: string,
   interval: number,
-  expiresAt: number
+  expiresAt: number,
+  generation: number
 ): Promise<void> {
+  if (generation !== flowGeneration) return
   if (Date.now() > expiresAt) {
+    cancelPolling()
     notifyRenderer('auth:github:device:error', 'Login timed out. Please try again.')
     return
   }
@@ -55,9 +60,11 @@ async function pollForToken(
       })
     })
     const data = (await res.json()) as TokenPollResponse
+    if (generation !== flowGeneration) return
 
     if (data.access_token) {
       const validation = await githubService.validateToken(data.access_token)
+      if (generation !== flowGeneration) return
       if (validation.status !== 'ok') {
         cancelPolling()
         notifyRenderer(
@@ -67,8 +74,14 @@ async function pollForToken(
         return
       }
 
+      try {
+        setGithubToken(data.access_token)
+      } catch {
+        cancelPolling()
+        notifyRenderer('auth:github:device:error', 'Could not store GitHub credentials securely. Please try again.')
+        return
+      }
       cancelPolling()
-      setGithubToken(data.access_token)
       notifyRenderer('auth:github:device:success')
       return
     }
@@ -78,7 +91,7 @@ async function pollForToken(
 
     if (data.error === 'authorization_pending' || data.error === 'slow_down') {
       pollTimer = setTimeout(
-        () => pollForToken(device_code, nextInterval, expiresAt),
+        () => pollForToken(device_code, nextInterval, expiresAt, generation),
         nextInterval * 1000
       )
       return
@@ -93,9 +106,10 @@ async function pollForToken(
         : (data.error_description ?? 'Authorization failed. Please try again.')
     )
   } catch {
+    if (generation !== flowGeneration) return
     // Network error — retry after interval
     pollTimer = setTimeout(
-      () => pollForToken(device_code, interval, expiresAt),
+      () => pollForToken(device_code, interval, expiresAt, generation),
       interval * 1000
     )
   }
@@ -103,7 +117,10 @@ async function pollForToken(
 
 export function registerAuthHandlers(): void {
   ipcMain.handle('auth:token:set', async (_event, token: string) => {
+    cancelPolling()
+    const generation = flowGeneration
     const validation = await githubService.validateToken(token)
+    if (generation !== flowGeneration) throw new Error('GitHub connection was cancelled.')
 
     if (validation.status !== 'ok') {
       throw new Error(validation.reason ?? 'This GitHub token could not be validated.')
@@ -118,11 +135,13 @@ export function registerAuthHandlers(): void {
   })
 
   ipcMain.handle('auth:token:clear', () => {
+    cancelPolling()
     clearGithubToken()
   })
 
   ipcMain.handle('auth:github:device:start', async () => {
     cancelPolling()
+    const generation = flowGeneration
 
     const res = await fetch('https://github.com/login/device/code', {
       method: 'POST',
@@ -130,12 +149,22 @@ export function registerAuthHandlers(): void {
       body: JSON.stringify({ client_id: GITHUB_CLIENT_ID, scope: 'repo' })
     })
     const data = (await res.json()) as DeviceCodeResponse
+    if (generation !== flowGeneration) throw new Error('GitHub login was cancelled.')
+    if (
+      !res.ok || !data.device_code || !data.user_code ||
+      data.verification_uri !== 'https://github.com/login/device' ||
+      !Number.isFinite(data.expires_in) || data.expires_in <= 0 ||
+      !Number.isFinite(data.interval) || data.interval <= 0
+    ) {
+      throw new Error('GitHub could not start login. Please try again.')
+    }
 
-    shell.openExternal(data.verification_uri)
+    await shell.openExternal(data.verification_uri)
+    if (generation !== flowGeneration) throw new Error('GitHub login was cancelled.')
 
     const expiresAt = Date.now() + data.expires_in * 1000
     pollTimer = setTimeout(
-      () => pollForToken(data.device_code, data.interval, expiresAt),
+      () => pollForToken(data.device_code, data.interval, expiresAt, generation),
       data.interval * 1000
     )
 
