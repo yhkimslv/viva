@@ -15,7 +15,7 @@ const store = new Store<CredentialsSchema>({
   ...(storeCwd ? { cwd: storeCwd } : {})
 })
 
-const require = createRequire(import.meta.url)
+const electronRequire = createRequire(import.meta.url)
 
 interface SafeStorageLike {
   isEncryptionAvailable(): boolean
@@ -25,7 +25,7 @@ interface SafeStorageLike {
 
 function getSafeStorage(): SafeStorageLike | null {
   try {
-    const electronModule = require('electron')
+    const electronModule = electronRequire('electron')
 
     if (typeof electronModule === 'string') {
       return null
