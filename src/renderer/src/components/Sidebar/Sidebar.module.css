@@ -175,6 +175,7 @@
   color: var(--text-active);
   border-color: var(--accent);
 }
+.weeklyReportBtn:disabled { opacity: .45; cursor: default; }
 
 .emptyHint {
   padding: 24px 16px;

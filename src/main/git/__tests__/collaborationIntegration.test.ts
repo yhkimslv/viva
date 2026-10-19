@@ -1,13 +1,14 @@
 import { execFileSync } from 'node:child_process'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { devNull, tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { simpleGit } from 'simple-git'
 import { GitService } from '../service'
 
 const directories: string[] = []
-const gitEnvironment = { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' }
+const gitEnvironment = { ...process.env, GIT_CONFIG_GLOBAL: devNull, GIT_CONFIG_NOSYSTEM: '1' }
 
 function git(cwd: string, ...args: string[]): string {
   return execFileSync('git', args, { cwd, env: gitEnvironment, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
@@ -40,7 +41,7 @@ describe('collaboration with real local git repositories', () => {
   it('uploads the same work branch twice and keeps a named, credential-free upstream', async () => {
     const { work, remote, service } = await fixture()
     // Exercise the HTTPS authentication code without contacting the network.
-    git(work, 'config', `url.file://${remote}.insteadOf`, 'https://github.com/team/project.git')
+    git(work, 'config', `url.${pathToFileURL(remote).href}.insteadOf`, 'https://github.com/team/project.git')
     git(work, 'remote', 'set-url', 'origin', 'https://github.com/team/project.git')
     const input = {
       mode: 'collaboration' as const, remoteName: 'origin', branchMode: 'new_branch' as const,
@@ -195,7 +196,7 @@ describe('collaboration with real local git repositories', () => {
     const unintended = join(directory, 'unintended.git')
     git(directory, 'init', '--bare', '--initial-branch=main', unintended)
     const expectedUrl = 'https://github.com/team/backup.git'
-    git(work, 'config', `url.file://${remote}.insteadOf`, expectedUrl)
+    git(work, 'config', `url.${pathToFileURL(remote).href}.insteadOf`, expectedUrl)
     git(work, 'remote', 'add', 'gat-backup', expectedUrl)
     git(work, 'config', '--add', 'remote.gat-backup.pushurl', expectedUrl)
     git(work, 'config', '--add', 'remote.gat-backup.pushurl', unintended)

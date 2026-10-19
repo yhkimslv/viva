@@ -1,6 +1,6 @@
 # VIVA 팀 사용 점검
 
-VIVA를 팀 프로젝트에서 사용할 때 작업 브랜치와 업로드 대상이 어긋나거나 병합이 끝나지 않는 문제를 수정했습니다. 작업 배정, 열린 PR과 CI 현황, 팀 전체 진행 관리는 현재 GitHub에서 함께 진행해야 합니다. 사용 순서는 [팀 운영 가이드](../../team-workflow.ko.md)에 있습니다.
+VIVA의 팀 협업 오류를 수정하고, 남아 있던 의존성 보안 권고를 해결했습니다. 앱 내 GitHub clone과 읽기 전용 리드 대시보드를 추가해 저장소 다운로드부터 리뷰·CI 현황 확인까지 연결했습니다. 사용 순서는 [팀 운영 가이드](../../team-workflow.ko.md)에 있습니다.
 
 ## 반영한 개선
 
@@ -16,14 +16,17 @@ VIVA를 팀 프로젝트에서 사용할 때 작업 브랜치와 업로드 대�
 | AI 전송 | AI Suggest와 수동 분석을 포함해 프로젝트별 동의를 검사합니다. 설정에서 자동 메시지 기능과 별개로 허용·취소할 수 있고, diff·파일 일부·이력 등 전송 범위를 안내합니다. |
 | 파일 상태 | 프로젝트 전환 전 응답을 무시합니다. dotfile과 Git의 HEAD·index·refs 변경을 감지하고 연속 이벤트 알림을 묶습니다. |
 | 검증 | 빈 루트 설정만 검사하던 typecheck를 실제 main·preload·renderer·shared·테스트 검사로 바꿨습니다. CI에도 앱 빌드를 추가했습니다. |
+| Clone | GitHub HTTPS 저장소를 새 폴더로 받습니다. 공개 저장소는 로그인 없이, 비공개 저장소는 저장된 인증을 사용합니다. 기존 경로를 덮어쓰지 않으며 완료한 저장소만 등록합니다. 실패·취소 시 임시 다운로드는 정리하고, 파일 게시가 시작된 최종 폴더는 보존하며 복구 경로를 안내합니다. |
+| 리드 대시보드 | 실제 GitHub의 열린 PR, 직접 리뷰 요청, 보수적인 리뷰 요약, CI, 담당 이슈와 최근 실행을 조회합니다. 조회 불가와 일부 범위를 구분하고, 계정·대상 변경 중 완료된 이전 결과를 전달하지 않습니다. |
 
 ## 검증 결과
 
 - `npm run typecheck`: main·preload·renderer·shared·테스트 검사 통과
-- `npm test`: 54개 파일의 테스트 217개 통과, 실제 로컬 Git 저장소 통합 테스트 10개 포함
+- `npm test`: 65개 파일의 테스트 345개 통과, Git 회귀·clone·대시보드와 화면 간 연결 포함
 - `npm run build`: main·preload·renderer 빌드 통과
 - 한국어 앱 화면에서 프로젝트 로딩과 AI 공유 범위 안내 레이아웃 확인
-- macOS arm64 앱 디렉터리 패키징 확인, 서명·정식 배포 제외
+- Electron 44 macOS arm64 임시 서명 패키징 및 실제 ASAR main·preload bridge·renderer 실행 확인
+- 실제 공개 GitHub 저장소 clone 성공과 인증 정보 없는 origin 확인, 실제 GitHub API 응답으로 대시보드 파서 연동 확인
 
 ## 기존 설정 전환
 
@@ -33,15 +36,19 @@ VIVA를 팀 프로젝트에서 사용할 때 작업 브랜치와 업로드 대�
 
 2026년 10월 19일 npm 감사에서 기존 의존성 45개에 보안 권고가 보고됐습니다. Git 실행 라이브러리인 `simple-git`을 4.0.2로 올리고 이름 있는 export와 환경 변수 허용 목록에 맞게 호출을 수정했습니다. 관련 근거는 [Git 실행 취약점 공지](https://github.com/advisories/GHSA-hffm-xvc3-vprc)와 [옵션 축약 우회 수정 공지](https://github.com/advisories/GHSA-858h-whjf-mvg5)에 있습니다.
 
-업데이트 후 npm 감사 결과는 44개이며 critical 3개, high 30개, moderate 9개, low 2개입니다. 이 수치는 개발·빌드 도구와 전이 의존성을 포함한 패키지 집계입니다. Electron, Vite, Vitest, electron-builder, chokidar 등의 버전 교체와 각 호출 경로의 노출 검토가 추가로 필요합니다. 정식 배포 전에 이 작업과 대상 OS 검증을 진행해야 합니다.
+후속 업데이트에서 Electron 44.9.0, electron-builder 26.15.3, electron-vite 6.0.0, Vite 8.3.4, Vitest 5.0.5, chokidar 6.0.0, electron-store 12.0.0, uuid 14.0.3으로 교체했습니다. 현재 npm 감사는 개발·선택·전이 의존성을 포함해 **0건**입니다. CI와 릴리스에도 감사 단계를 추가했습니다.
+
+빌더 내부 `@electron/get`의 선택적 프록시 의존성은 `global-agent` 4.1.3으로 범위를 좁혀 고정했습니다. 구버전의 로거가 미수정 `sprintf-js`를 끌어오는 경로를 제거하기 위해서입니다. [공식 v4 변경 내역](https://github.com/gajus/global-agent/releases/tag/v4.0.0)의 기존 bootstrap API와 실제 로컬 프록시 요청으로 호환성을 확인했으며, 권고를 숨기는 예외 설정은 사용하지 않습니다.
+
+main은 ESM, preload는 CJS로 빌드합니다. `node --check`로 출력 문법을 확인하고 빌드 캐시는 앱 패키지에서 제외합니다. 개발 환경은 Node.js 24 LTS, macOS는 13 이상을 기준으로 합니다.
 
 ## 추가 개발 우선순위
 
 | 우선순위 | 필요한 결과 |
 | --- | --- |
-| 배포 전 | Electron과 빌드·테스트 도구 의존성 갱신, Windows·Linux 설치 실행, macOS 서명·공증을 검증합니다. 현재 확인한 macOS 앱 패키지는 서명 없는 arm64 테스트용입니다. |
-| 온보딩 | 앱 안에서 clone과 Git 이름·이메일 설정을 완료하도록 만듭니다. 현재는 외부에서 준비한 로컬 저장소를 연결합니다. |
+| 배포 전 | Windows·Linux 설치 실행과 macOS 배포용 Developer ID 서명·공증을 검증합니다. 현재 확인한 macOS 앱은 arm64 임시 서명 테스트용입니다. |
+| 온보딩 | Git 이름·이메일 설정 화면은 추가 과제로 남습니다. 현재 clone은 앱에서 완료하고 작성자 정보는 외부 Git 설정을 사용합니다. |
 | 코드 검토 | 실제 diff 비교와 구간별 충돌 편집, binary·삭제 충돌, rebase·cherry-pick의 구분을 제공합니다. 현재 충돌 UI는 merge와 파일 전체 선택을 기준으로 합니다. |
-| 리드 현황 | GitHub의 담당 이슈, 열린 PR, 리뷰 대기, CI 결과를 한 화면에 모읍니다. 현재 Weekly Report는 로컬 HEAD에서 도달 가능한 이력의 집계입니다. |
+| 작업 관리 | 대시보드는 읽기 전용입니다. 이슈 생성·배정·마감일 변경과 리뷰·병합은 GitHub에서 진행합니다. Weekly Report는 로컬 HEAD에서 도달 가능한 이력의 집계입니다. |
 
 현재 변경은 검토용 브랜치에 준비하며, 정식 릴리스나 팀 저장소 보호 규칙 변경은 포함하지 않습니다.

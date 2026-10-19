@@ -6,6 +6,7 @@ import { useAiConnection } from './hooks/useAiConnection'
 import { useAutoSaveMessage } from './hooks/useAutoSaveMessage'
 import { useBranches } from './hooks/useBranches'
 import { useCloudSetup } from './hooks/useCloudSetup'
+import { useCloneProject } from './hooks/useCloneProject'
 import { useFileInsight } from './hooks/useFileInsight'
 import { useFileStatus } from './hooks/useFileStatus'
 import { useGitActions } from './hooks/useGitActions'
@@ -22,6 +23,8 @@ import { ActionPanel } from './components/ActionPanel/ActionPanel'
 import { AIStatus, ConnectAI } from './components/ConnectAI/ConnectAI'
 import { BranchSelector } from './components/BranchSelector/BranchSelector'
 import { CloudSetupWizard } from './components/CloudSetupWizard/CloudSetupWizard'
+import { CloneProjectDialog } from './components/CloneProjectDialog/CloneProjectDialog'
+import { LeadDashboard } from './components/LeadDashboard/LeadDashboard'
 import { ConnectGitHub, GitHubStatus } from './components/ConnectGitHub/ConnectGitHub'
 import { DangerZoneUploadDialog } from './components/DangerZoneUploadDialog/DangerZoneUploadDialog'
 import { FileInsightPanel } from './components/FileInsightPanel/FileInsightPanel'
@@ -56,7 +59,7 @@ function Shell(): JSX.Element {
   const { preferences, setPreference } = usePreferences()
   const t = useTerms()
   const { addToast } = useToast()
-  const { tokenExists, deviceFlow, saveToken, clearToken, startDeviceFlow, cancelDeviceFlow } = useAuth()
+  const { tokenExists, connectionRevision, deviceFlow, saveToken, clearToken, startDeviceFlow, cancelDeviceFlow } = useAuth()
   const { connectionStatus, connect, disconnect, setModel } = useAiConnection()
   const { settings: projectAiSettings, updateSettings: updateProjectAiSettings } =
     useProjectAiSettings(activeProjectId)
@@ -64,12 +67,16 @@ function Shell(): JSX.Element {
   const linkWizard = useProjectLinkWizard({
     onLinked: (project) => addToast(t.repoAdded(project.friendly_name), 'success')
   })
+  const cloneProject = useCloneProject({
+    onCloned: (project) => addToast(t.repoAdded(project.friendly_name), 'success')
+  })
 
   const [showGitHubPanel, setShowGitHubPanel] = useState(false)
   const [showAiPanel, setShowAiPanel] = useState(false)
   const [showProjectSettingsPanel, setShowProjectSettingsPanel] = useState(false)
   const [showConflictResolver, setShowConflictResolver] = useState(false)
   const [showWeeklyReport, setShowWeeklyReport] = useState(false)
+  const [showLeadDashboard, setShowLeadDashboard] = useState(false)
   const [showAiConsentDialog, setShowAiConsentDialog] = useState(false)
   const [pendingDangerTarget, setPendingDangerTarget] = useState<ProjectCloudTarget | null>(null)
   const [uploadHandoff, setUploadHandoff] = useState<PushConfiguredTargetResult | null>(null)
@@ -612,10 +619,16 @@ function Shell(): JSX.Element {
           onSelectProject={setActiveProject}
           onRemoveProject={handleRemoveProject}
           onAddProject={handleAddProject}
+          onCloneProject={cloneProject.open}
+          onLeadDashboard={() => {
+            setShowWeeklyReport(false)
+            setShowLeadDashboard((value) => !value)
+          }}
+          leadDashboardActive={showLeadDashboard}
           onToggleTheme={handleToggleTheme}
           onToggleMode={handleToggleMode}
           onToggleLanguage={handleToggleLanguage}
-          onWeeklyReport={() => setShowWeeklyReport((v) => !v)}
+          onWeeklyReport={() => { setShowLeadDashboard(false); setShowWeeklyReport((v) => !v) }}
           weeklyReportActive={showWeeklyReport}
           projectStates={projectStates}
           githubSlot={
@@ -643,7 +656,7 @@ function Shell(): JSX.Element {
             <>
               <header className={styles.header}>
                 <span className={styles.projectTitle}>{activeProject.friendly_name}</span>
-                {status && (
+                {status && !showLeadDashboard && (
                   <BranchSelector
                     currentBranch={status.current_branch}
                     protectedBranch={protectedBranch}
@@ -669,7 +682,19 @@ function Shell(): JSX.Element {
                 )}
               </header>
 
-              {showWeeklyReport ? (
+              {showLeadDashboard ? (
+                <LeadDashboard
+                  key={`${activeProjectId}:${tokenExists}:${connectionRevision}:${JSON.stringify(cloudSetup.target)}`}
+                  projectId={activeProjectId}
+                  language={preferences.language ?? 'en'}
+                  connected={tokenExists === true}
+                  repositoryReady={true}
+                  contextKey={`${connectionRevision}:${JSON.stringify(cloudSetup.target)}`}
+                  onConnect={() => setShowGitHubPanel(true)}
+                  onSetup={() => { void cloudSetup.open(false) }}
+                  onClose={() => setShowLeadDashboard(false)}
+                />
+              ) : showWeeklyReport ? (
                 <WeeklyReport projectId={activeProjectId} aiConnection={connectionStatus} onClose={() => setShowWeeklyReport(false)} />
               ) : isNotARepo ? (
                 <NotARepo projectPath={activeProject.local_path} onInit={handleInitRepo} />
@@ -711,7 +736,7 @@ function Shell(): JSX.Element {
                 </div>
               )}
 
-              {!showWeeklyReport && <ActionPanel
+              {!showWeeklyReport && !showLeadDashboard && <ActionPanel
                 status={status}
                 loading={actionLoading}
                 aiLoading={aiLoading}
@@ -757,6 +782,10 @@ function Shell(): JSX.Element {
                   ? 'Link a project folder from the sidebar to get started.'
                   : 'Add a repository from the sidebar to get started.'}
               </p>
+              <div className={styles.welcomeActions}>
+                <button className={styles.welcomeClone} onClick={cloneProject.open}>{preferences.language === 'ko' ? 'GitHub에서 복제' : 'Clone from GitHub'}</button>
+                <button className={styles.settingsBtn} onClick={handleAddProject}>{t.addRepo}</button>
+              </div>
             </div>
           )}
         </div>
@@ -771,6 +800,7 @@ function Shell(): JSX.Element {
         )}
 
         <ToastContainer />
+        <CloneProjectDialog {...cloneProject} />
 
         {linkWizard.isOpen && (
           <ProjectLinkWizard

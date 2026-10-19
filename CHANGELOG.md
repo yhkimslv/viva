@@ -9,6 +9,11 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- In-app GitHub HTTPS clone with progress, cancellation, exclusive destination writes, and recovery guidance
+- Read-only lead dashboard for PRs, review requests, CI, assigned team issues, and workflow runs
+- Ubuntu and Windows CI with an audit gate covering all dependencies
+
 ### Fixed
 - Repeat team uploads, stale branch/repository targets, authenticated update previews, and concurrent Git operations
 - Default branch protection and deletion safety for unmerged local or teammate work
@@ -19,6 +24,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Actual source typechecking and production build validation in CI
 
 ### Changed
+- Updated Electron, the build/test toolchain, file watcher, settings store, and UUID dependencies; npm audit reports zero vulnerabilities
+- ESM main/CJS preload output, packaged-app runtime verification, and syntax checks on build output
 - Updated simple-git to 4.0.2 with scoped authentication and explicit safe environment configuration
 - Added a team workflow guide, readiness review, and PR template
 

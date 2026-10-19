@@ -13,6 +13,9 @@ interface Props {
   onSelectProject: (id: string) => void
   onRemoveProject: (id: string) => void
   onAddProject: () => void
+  onCloneProject?: () => void
+  onLeadDashboard?: () => void
+  leadDashboardActive?: boolean
   onToggleTheme: () => void
   onToggleMode?: () => void
   onToggleLanguage?: () => void
@@ -36,6 +39,9 @@ export function Sidebar({
   onSelectProject,
   onRemoveProject,
   onAddProject,
+  onCloneProject,
+  onLeadDashboard,
+  leadDashboardActive,
   onToggleTheme,
   onToggleMode,
   onToggleLanguage,
@@ -95,6 +101,13 @@ export function Sidebar({
         <button className={styles.linkBtn} onClick={onAddProject}>
           {t.addRepo}
         </button>
+        {onCloneProject && <button className={`${styles.weeklyReportBtn} ${styles.centeredFooterButton}`} onClick={onCloneProject}>
+          {language === 'ko' ? 'GitHub에서 복제' : 'Clone from GitHub'}
+        </button>}
+        {onLeadDashboard && <button
+          className={`${styles.weeklyReportBtn} ${styles.centeredFooterButton} ${leadDashboardActive ? styles.active : ''}`}
+          onClick={onLeadDashboard} disabled={!activeProjectId} aria-pressed={Boolean(leadDashboardActive)}
+        >{language === 'ko' ? '리드 대시보드' : 'Lead dashboard'}</button>}
         {onWeeklyReport && (
           <button
             className={`${styles.weeklyReportBtn} ${styles.centeredFooterButton} ${weeklyReportActive ? styles.active : ''}`}
