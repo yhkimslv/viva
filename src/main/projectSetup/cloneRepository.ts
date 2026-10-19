@@ -1,7 +1,6 @@
 import { spawn, ChildProcess } from 'node:child_process'
 import { constants } from 'node:fs'
 import { copyFile, lstat, mkdir, mkdtemp, readdir, readlink, realpath, rm, rmdir, stat, symlink } from 'node:fs/promises'
-import { devNull } from 'node:os'
 import { dirname, isAbsolute, join, normalize, parse, resolve, sep, win32 } from 'node:path'
 import {
   CloneErrorCode, CloneInput, CloneProgress, ClonedProject, CloneResult,
@@ -66,7 +65,9 @@ export function cloneGitEnvironment(token: string | null): NodeJS.ProcessEnv {
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')))
   return {
     ...env,
-    GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: devNull,
+    // Git for Windows maps /dev/null to nul itself. Node's os.devNull value
+    // (\\.\nul) is not a valid configuration path for Git's compatibility layer.
+    GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null',
     GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never',
     GIT_CONFIG_COUNT: token ? '1' : '0',
     ...(token ? {
@@ -98,7 +99,7 @@ export function runGitClone(input: CloneTransportInput): Promise<void> {
   checkCancelled(input.signal)
   return new Promise((resolvePromise, reject) => {
     const child = spawn('git', [
-      '-c', 'credential.helper=', '-c', 'core.hooksPath=' + devNull,
+      '-c', 'credential.helper=', '-c', 'core.hooksPath=/dev/null',
       '-c', 'protocol.allow=never', '-c', 'protocol.https.allow=always',
       '-c', 'http.followRedirects=false', '-c', 'submodule.recurse=false',
       'clone', '--progress', '--no-recurse-submodules', '--template=', '--',

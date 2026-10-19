@@ -22,7 +22,7 @@ VIVA의 팀 협업 오류를 수정하고, 남아 있던 의존성 보안 권고
 ## 검증 결과
 
 - `npm run typecheck`: main·preload·renderer·shared·테스트 검사 통과
-- `npm test`: 65개 파일의 테스트 345개 통과, Git 회귀·clone·대시보드와 화면 간 연결 포함
+- `npm test`: 65개 파일의 테스트 346개 통과, Git 회귀·clone·대시보드와 화면 간 연결 포함
 - `npm run build`: main·preload·renderer 빌드 통과
 - 한국어 앱 화면에서 프로젝트 로딩·AI 공유 범위 안내·clone 입력창·대시보드 연결 안내 레이아웃 확인
 - Electron 44 macOS arm64 임시 서명 패키징 및 실제 ASAR main·preload bridge·renderer 실행 확인

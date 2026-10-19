@@ -42,6 +42,16 @@ describe('clone request validation', () => {
 })
 
 describe('cloneRepository', () => {
+  it('runs real Git with the production isolated environment and portable disabled-hook path', async () => {
+    const f = await fixture()
+    const options = { cwd: f.input.parentPath, env: cloneGitEnvironment(null) }
+    const globalConfig = await exec('git', ['config', '--global', '--list'], options)
+    expect(globalConfig.stdout.trim()).toBe('')
+    const hooksPath = await exec('git', ['-c', 'core.hooksPath=/dev/null', 'config', '--get', 'core.hooksPath'], options)
+    expect(hooksPath.stdout.trim()).toBe('/dev/null')
+    await exec('git', ['-c', 'core.hooksPath=/dev/null', 'init', '--initial-branch=main', 'isolated'], options)
+    expect((await lstat(join(f.input.parentPath, 'isolated', '.git'))).isDirectory()).toBe(true)
+  })
   it('clones a real Git repository through an isolated test transport and only then registers it', async () => {
     const f = await fixture()
     const source = join(f.input.parentPath, 'source')

@@ -22,6 +22,7 @@ describe('Git clone transport', () => {
     const [command, args, options] = mocks.spawn.mock.calls[0]
     expect(command).toBe('git')
     expect(args).toContain('http.followRedirects=false')
+    expect(args).toContain('core.hooksPath=/dev/null')
     expect(args).toContain('protocol.allow=never')
     expect(args).toContain('protocol.https.allow=always')
     expect(args).toContain('--no-recurse-submodules')
