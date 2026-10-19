@@ -119,7 +119,7 @@ function Shell(): JSX.Element {
     if (status?.has_conflicts) {
       setShowConflictResolver(true)
     }
-  }, [status?.has_conflicts])
+  }, [activeProjectId, status?.has_conflicts])
 
   const {
     branches,
@@ -382,24 +382,21 @@ function Shell(): JSX.Element {
   }
 
   const handleResolveConflict = async (filePath: string, strategy: 'ours' | 'theirs'): Promise<void> => {
-    if (!activeProjectId) return
+    if (!activeProjectId) throw new Error(t.conflictOperationFailed)
     await invokeGit('git:conflict:resolve', activeProjectId, filePath, strategy)
     await fetchStatus()
   }
 
   const handleAbortMerge = async (): Promise<void> => {
-    if (!activeProjectId) return
+    if (!activeProjectId) throw new Error(t.conflictOperationFailed)
     await invokeGit('git:conflict:abort', activeProjectId)
     await fetchStatus()
     addToast(t.abortMergeBtn, 'info')
   }
 
-  const handleCompleteMerge = async (message: string): Promise<void> => {
-    if (!activeProjectId || !status) return
-    const saved = await commit(message)
-    if (!saved) return
-    setShowConflictResolver(false)
-    addToast(t.committedToast, 'success')
+  const handleCompleteMerge = async (message: string): Promise<boolean> => {
+    if (!activeProjectId || !status) return false
+    return await commit(message)
   }
 
   const handleSuggestMergeMessage = async (): Promise<{ message: string }> => {
@@ -867,8 +864,9 @@ function Shell(): JSX.Element {
           </FloatingPanel>
         )}
 
-        {showConflictResolver && status?.has_conflicts && activeProjectId && (
+        {showConflictResolver && status && activeProjectId && (
           <ConflictResolver
+            key={activeProjectId}
             conflictedFiles={status.files.filter((f) => f.status === 'conflicted')}
             aiEnabled={manualAiToolsEnabled}
             onResolve={handleResolveConflict}

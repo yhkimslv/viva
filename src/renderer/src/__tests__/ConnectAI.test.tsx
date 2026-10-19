@@ -36,6 +36,7 @@ describe('ConnectAI', () => {
         onDisconnect={vi.fn()}
         onOpenProviderDocs={vi.fn()}
         onSelectModel={vi.fn()}
+        onClose={vi.fn()}
       />
     )
 

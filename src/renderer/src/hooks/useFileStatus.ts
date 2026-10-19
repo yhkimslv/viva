@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { invokeGit } from '../ipc'
 import { GitError, GitStatus } from '../types'
 
@@ -13,21 +13,41 @@ export function useFileStatus(project_id: string | null): {
   unstageAll: () => Promise<void>
   revertFile: (path: string) => Promise<void>
 } {
-  const [status, setStatus] = useState<GitStatus | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<GitError | null>(null)
+  const [state, setState] = useState<{
+    projectId: string | null
+    status: GitStatus | null
+    loading: boolean
+    error: GitError | null
+  }>({ projectId: project_id, status: null, loading: false, error: null })
+  const { status, loading, error } = state.projectId === project_id
+    ? state
+    : { status: null, loading: Boolean(project_id), error: null }
+  const projectRef = useRef(project_id)
+  projectRef.current = project_id
+  const requestRef = useRef(0)
+
+  useEffect(() => () => { requestRef.current += 1 }, [])
 
   const fetchStatus = useCallback(async (): Promise<void> => {
-    if (!project_id) { setStatus(null); return }
-    setLoading(true)
-    setError(null)
+    if (projectRef.current !== project_id) return
+    const request = ++requestRef.current
+    const isCurrent = (): boolean =>
+      projectRef.current === project_id && requestRef.current === request
+    if (!project_id) {
+      setState({ projectId: null, status: null, loading: false, error: null })
+      return
+    }
+    setState((current) => ({
+      projectId: project_id,
+      status: current.projectId === project_id ? current.status : null,
+      loading: true,
+      error: null
+    }))
     try {
       const result = await invokeGit<GitStatus>('git:status', project_id)
-      setStatus(result)
+      if (isCurrent()) setState({ projectId: project_id, status: result, loading: false, error: null })
     } catch (err) {
-      setError(err as GitError)
-    } finally {
-      setLoading(false)
+      if (isCurrent()) setState((current) => ({ ...current, error: err as GitError, loading: false }))
     }
   }, [project_id])
 

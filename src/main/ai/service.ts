@@ -104,7 +104,7 @@ export function createAiService(overrides: Partial<ProviderMap> = {}) {
         throw new Error('The current AI connection does not support AI suggestions.')
       }
 
-      const payload = await provider.generateStructured({
+      const payload = await provider.generateStructured<Parameters<typeof finalizeCommitSuggestion>[0]>({
         apiKey: input.apiKey,
         model: input.model,
         systemPrompt: buildCommitSuggestionSystemPrompt(input.outputLanguage ?? 'en'),

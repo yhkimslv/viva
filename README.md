@@ -11,6 +11,8 @@ VIVA (Visual Interface for Version Assistance) is a local-first desktop app that
 
 Built for vibe coders, designers, students, and early-stage developers who generate code with AI tools but need a reliable way to manage it.
 
+For team projects, see the [team workflow guide in Korean](docs/team-workflow.ko.md) and the [team readiness review](docs/superpowers/reports/2026-10-19-team-readiness.md).
+
 ---
 
 ## Features
@@ -130,7 +132,7 @@ For team upload, the recommended path is a new work branch such as `gat/my-updat
 
 Use **Get Updates** when the connected remote has new commits.
 
-The app previews the incoming commits and changed files before pulling. Pulling can still fail if Git reports a conflict; in that case the app shows the conflict instead of trying to auto-resolve it.
+The app previews incoming commits before pulling. Pulling can still fail if Git reports a conflict; in that case the app shows the conflict instead of trying to auto-resolve it.
 
 ---
 
@@ -208,7 +210,7 @@ The app does not automatically reuse `origin` for upload. A cloud target must be
 
 Use **Get Updates** to inspect incoming remote commits before pulling from the selected collaboration branch.
 
-The app previews commits and changed files when Git can report them cleanly. If pulling would create a conflict, the app reports the conflict instead of attempting automatic resolution.
+The app previews incoming commits on the selected work branch. If the preview fails, it does not pull. If pulling creates a conflict, the app opens the conflict resolver.
 
 ### Project Settings
 
@@ -319,7 +321,7 @@ When AI is connected, produces a feature-focused summary from recent history. Wh
 | Desktop shell | [Electron](https://www.electronjs.org/) |
 | UI | [React](https://react.dev/) + TypeScript |
 | Git operations | [simple-git](https://github.com/steveukx/git-js) |
-| Local storage | SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) |
+| Local settings storage | [electron-store](https://github.com/sindresorhus/electron-store) |
 | AI providers | OpenAI API, Anthropic API |
 | i18n | Custom i18n layer (English + Korean) |
 | Tests | [Vitest](https://vitest.dev/) + Testing Library |

@@ -11,6 +11,10 @@ VIVA(Visual Interface for Version Assistance)는 코드를 안전하고 쉽게 �
 
 AI 도구로 코드를 생성하지만 이를 안정적으로 관리할 방법이 필요한 바이브 코더, 디자이너, 학생, 초기 개발자를 위해 만들었습니다.
 
+팀 프로젝트를 시작한다면 [팀 운영 가이드](docs/team-workflow.ko.md)에서 연결, 작업 브랜치, PR 리뷰, 충돌 해결 흐름을 확인하세요.
+
+[팀 사용 점검 결과](docs/superpowers/reports/2026-10-19-team-readiness.md)에는 이번 수정과 배포 전 남은 과제를 정리했습니다.
+
 ---
 
 ## 기능
@@ -23,7 +27,7 @@ AI 도구로 코드를 생성하지만 이를 안정적으로 관리할 방법�
 - **선택형 AI 도구** — AI provider 키를 한 번 연결하면 저장 메시지 제안과 수동 AI 도구를 사용할 수 있습니다
 - **언어와 용어 모드 분리** — English/한국어를 독립적으로 전환하고, 초보자 친화 용어와 Git 친화 용어를 별도로 선택합니다
 - **명시적 클라우드 업로드** — private backup repo 또는 팀 협업 대상을 직접 선택하기 전에는 아무것도 push하지 않습니다
-- **업데이트 미리보기** — remote의 새 변경사항을 pull하기 전에 commit과 변경 파일을 먼저 확인합니다
+- **업데이트 미리보기** — remote의 새 변경사항을 pull하기 전에 incoming commit을 먼저 확인합니다
 
 UI에서 shell 명령어를 직접 입력할 필요는 없습니다.
 
@@ -130,7 +134,7 @@ project header의 branch pill에서 다음을 할 수 있습니다.
 
 연결된 remote에 새 commit이 있으면 **Get Updates**를 사용합니다.
 
-앱은 pull 전에 incoming commit과 changed file을 미리 보여줍니다. Git conflict가 발생하면 앱이 conflict를 알려주며, 자동으로 해결하려고 하지 않습니다.
+앱은 pull 전에 incoming commit을 미리 보여줍니다. Git conflict가 발생하면 앱이 conflict를 알려주며, 자동으로 해결하려고 하지 않습니다.
 
 ---
 
@@ -208,7 +212,7 @@ local change를 저장한 뒤 **Upload to Cloud**를 사용합니다.
 
 **Get Updates**는 선택된 collaboration branch에서 pull하기 전에 incoming remote commit을 확인하는 기능입니다.
 
-Git이 clean하게 보고할 수 있는 경우 commit과 changed file preview를 보여줍니다. pull이 conflict를 만들 수 있으면 앱은 자동 해결 대신 conflict를 보고합니다.
+앱은 선택한 작업 브랜치의 incoming commit을 미리 보여줍니다. 미리보기가 실패하면 pull하지 않습니다. pull이 conflict를 만들면 앱은 충돌 해결 화면을 보여줍니다.
 
 ### Project Settings
 
@@ -319,7 +323,7 @@ AI가 연결되어 있으면 최근 history를 바탕으로 feature-focused summ
 | 데스크톱 셸 | [Electron](https://www.electronjs.org/) |
 | UI | [React](https://react.dev/) + TypeScript |
 | Git 작업 | [simple-git](https://github.com/steveukx/git-js) |
-| 로컬 저장소 | SQLite ([better-sqlite3](https://github.com/WiseLibs/better-sqlite3)) |
+| 로컬 설정 저장 | [electron-store](https://github.com/sindresorhus/electron-store) |
 | AI provider | OpenAI API, Anthropic API |
 | 다국어 | 자체 i18n 레이어 (English + 한국어) |
 | 테스트 | [Vitest](https://vitest.dev/) + Testing Library |

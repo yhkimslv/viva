@@ -126,6 +126,10 @@ export interface AppTerms {
   themeLabelDark: string
   conflictResolverTitle: string
   conflictResolverDesc: string
+  conflictChoiceHelp: string
+  conflictOperationFailed: string
+  closeConflictResolverLabel: string
+  conflictCommitMessageLabel: string
   keepMineBtn: string
   keepTheirsBtn: string
   resolvedLabel: string
@@ -149,6 +153,11 @@ export interface AppTerms {
   diffConsentLabel: string
   diffConsentGrantedLabel: string
   diffConsentNotGrantedLabel: string
+  allowAiDataSharingLabel: string
+  aiDataSharingDescription: string
+  aiConsentTitle: string
+  aiConsentAccept: string
+  aiConsentDecline: string
   openConnectAiBtn: string
   cloudUploadTitle: string
   statusLabel: string
@@ -362,6 +371,10 @@ function formatEnglishGitError(code: string, fallback: string): string {
     NOT_A_REPO: 'This folder is not a linked project. Please re-link it.',
     NO_REMOTE: 'No cloud destination is set up for this project.',
     DEFAULT_BRANCH_PROTECTED: 'Default branch upload requires danger-mode confirmation.',
+    BRANCH_MISMATCH:
+      'The current branch changed. Switch to the configured upload branch or choose the upload target again.',
+    BRANCH_NOT_MERGED:
+      'Merge this branch into the current branch before deleting it. Its saved work is still separate.',
     AUTH_FAILED: 'Login failed. Please check your credentials in Settings.',
     NETWORK_ERROR: 'Could not reach the cloud. Please check your internet connection.',
     MERGE_CONFLICT: 'There is a version mismatch that needs to be resolved before continuing.',
@@ -386,6 +399,10 @@ function formatKoreanGitError(code: string, fallback: string): string {
     NOT_A_REPO: '이 폴더는 아직 연결된 프로젝트가 아닙니다. 다시 연결하세요.',
     NO_REMOTE: '이 프로젝트의 클라우드 업로드 대상이 아직 설정되지 않았습니다.',
     DEFAULT_BRANCH_PROTECTED: 'default branch에 직접 올리려면 위험 옵션 확인이 필요합니다.',
+    BRANCH_MISMATCH:
+      '현재 브랜치가 업로드 대상으로 선택한 브랜치와 달라요. 선택한 브랜치로 전환하거나 업로드 대상을 다시 설정해 주세요.',
+    BRANCH_NOT_MERGED:
+      '이 브랜치에만 저장된 작업이 있어요. 현재 브랜치에 먼저 병합한 뒤 삭제해 주세요.',
     AUTH_FAILED: '로그인에 실패했습니다. GitHub 연결 정보를 확인하세요.',
     NETWORK_ERROR: '클라우드에 연결할 수 없습니다. 인터넷 연결을 확인하세요.',
     MERGE_CONFLICT: '계속하기 전에 해결해야 하는 버전 충돌이 있습니다.',
@@ -421,6 +438,10 @@ const EN_COMMON_APP_TERMS = {
   themeLabelDark: 'Dark',
   conflictResolverTitle: 'Merge conflicts',
   conflictResolverDesc: 'Choose which version to keep for each file, then complete the merge.',
+  conflictChoiceHelp: 'Each choice replaces the entire file. Mine keeps your current branch; theirs keeps the incoming branch. Review the changes before completing the merge.',
+  conflictOperationFailed: 'Could not finish this step. Please try again.',
+  closeConflictResolverLabel: 'Close conflict resolver',
+  conflictCommitMessageLabel: 'Merge commit message',
   keepMineBtn: 'Keep mine',
   keepTheirsBtn: 'Keep theirs',
   resolvedLabel: 'Resolved',
@@ -434,7 +455,7 @@ const EN_COMMON_APP_TERMS = {
   conflictAiRecommendOurs: '→ keep yours',
   conflictAiRecommendTheirs: '→ keep incoming',
   gitErrorMessage: formatEnglishGitError,
-  aiSaveMessagesTitle: 'AI Save Messages',
+  aiSaveMessagesTitle: 'AI Tools',
   useAiAutoSaveMessagesLabel: 'Use AI auto save messages',
   aiConnectionLabel: 'Connection',
   aiConnectedLabel: 'AI connected',
@@ -442,9 +463,15 @@ const EN_COMMON_APP_TERMS = {
   aiConnectProviderFirstLabel: 'Connect a provider first',
   modelLabel: 'Model',
   noneSelectedLabel: 'None selected',
-  diffConsentLabel: 'Diff consent',
+  diffConsentLabel: 'AI data sharing',
   diffConsentGrantedLabel: 'Granted',
   diffConsentNotGrantedLabel: 'Not granted yet',
+  allowAiDataSharingLabel: 'Allow AI data sharing for this project',
+  aiDataSharingDescription:
+    'AI tools send relevant diffs, file snippets, conflict contents, file paths, and commit history to your connected AI provider. Allow only projects you can share. You can revoke this permission here at any time.',
+  aiConsentTitle: 'Allow AI data sharing for this project?',
+  aiConsentAccept: 'Allow AI for this project',
+  aiConsentDecline: 'Not now',
   openConnectAiBtn: 'Open Connect AI',
   cloudUploadTitle: 'Cloud Upload',
   statusLabel: 'Status',
@@ -595,6 +622,10 @@ const KO_COMMON_APP_TERMS = {
   themeLabelDark: '어둡게',
   conflictResolverTitle: '충돌 해결',
   conflictResolverDesc: '각 파일에서 유지할 버전을 선택한 후 머지를 완료하세요.',
+  conflictChoiceHelp: '선택하면 파일 전체가 해당 버전으로 바뀝니다. 내 버전은 현재 브랜치, 상대 버전은 가져오는 브랜치의 파일입니다. 머지를 완료하기 전에 변경 내용을 확인하세요.',
+  conflictOperationFailed: '작업을 완료하지 못했습니다. 다시 시도해 주세요.',
+  closeConflictResolverLabel: '충돌 해결 창 닫기',
+  conflictCommitMessageLabel: '머지 커밋 메시지',
   keepMineBtn: '내 버전 유지',
   keepTheirsBtn: '상대 버전 유지',
   resolvedLabel: '해결됨',
@@ -608,7 +639,7 @@ const KO_COMMON_APP_TERMS = {
   conflictAiRecommendOurs: '→ 내 버전 추천',
   conflictAiRecommendTheirs: '→ 상대 버전 추천',
   gitErrorMessage: formatKoreanGitError,
-  aiSaveMessagesTitle: 'AI 저장 메시지',
+  aiSaveMessagesTitle: 'AI 도구',
   useAiAutoSaveMessagesLabel: 'AI 자동 저장 메시지 사용',
   aiConnectionLabel: 'AI 연결',
   aiConnectedLabel: 'AI 연결됨',
@@ -616,9 +647,15 @@ const KO_COMMON_APP_TERMS = {
   aiConnectProviderFirstLabel: 'AI provider를 먼저 연결하세요',
   modelLabel: '모델',
   noneSelectedLabel: '선택 안 됨',
-  diffConsentLabel: 'diff 동의',
+  diffConsentLabel: 'AI 데이터 공유',
   diffConsentGrantedLabel: '허용됨',
   diffConsentNotGrantedLabel: '아직 허용 안 됨',
+  allowAiDataSharingLabel: '이 프로젝트의 AI 데이터 공유 허용',
+  aiDataSharingDescription:
+    'AI 도구는 관련 diff, 파일 일부, 충돌 내용, 파일 경로, 커밋 기록을 연결된 AI provider로 전송합니다. 공유 가능한 프로젝트만 허용하세요. 이 설정에서 언제든 허용을 취소할 수 있습니다.',
+  aiConsentTitle: '이 프로젝트의 AI 데이터 공유를 허용할까요?',
+  aiConsentAccept: '이 프로젝트의 AI 사용 허용',
+  aiConsentDecline: '나중에',
   openConnectAiBtn: 'AI 연결 열기',
   cloudUploadTitle: '클라우드 업로드',
   statusLabel: '상태',

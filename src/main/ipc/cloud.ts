@@ -2,6 +2,8 @@ import { ipcMain } from 'electron'
 import { getProjectCloudTarget, setProjectCloudTarget } from '../db/projectCloudTargets'
 import { getGithubToken } from '../db/credentials'
 import { createGithubService } from '../github/service'
+import { getGitService } from '../git'
+import { validateBranchName } from '../../shared/branchValidation'
 
 const githubService = createGithubService()
 
@@ -72,6 +74,10 @@ export function registerCloudHandlers(): void {
         throw new Error('Connect GitHub before choosing a team upload target.')
       }
 
+      const branchValidation = validateBranchName(input.selectedBranch)
+      if (!branchValidation.ok) throw new Error(branchValidation.message ?? 'Invalid branch name.')
+      await getGitService(project_id).validateCollaborationRemote(input.remoteName, input.repoOwner, input.repoName)
+
       const validation = await githubService.validateTokenForRepository({
         token,
         owner: input.repoOwner,
@@ -89,6 +95,8 @@ export function registerCloudHandlers(): void {
         backup: null,
         collaboration: {
           remoteName: input.remoteName,
+          repoOwner: input.repoOwner,
+          repoName: input.repoName,
           branchMode: input.branchMode,
           selectedBranch: input.selectedBranch
         }

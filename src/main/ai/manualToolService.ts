@@ -58,7 +58,7 @@ const OUTPUT_LANGUAGE_LABEL: Record<AiOutputLanguage, string> = {
 }
 
 function normalizeConfidence(value: number | undefined, fallback: number): number {
-  if (!Number.isFinite(value)) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
     return fallback
   }
 
@@ -333,7 +333,7 @@ export function createManualToolService(deps: {
       })
 
       const items: UntrackedReviewItem[] = (model.decisions ?? [])
-        .map((decision) => {
+        .map((decision): UntrackedReviewItem => {
           const normalizedPath = decision.path?.replace(/\\/g, '/').trim() ?? ''
           const recommendation = decision.recommendation === 'delete' ? 'delete' : 'commit'
 

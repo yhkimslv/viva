@@ -160,7 +160,7 @@ describe('WeeklyReport', () => {
   })
 
   it('shows a deterministic summary when AI is disconnected', () => {
-    render(<WeeklyReport projectId="project-1" aiConnection={disconnected} />)
+    render(<WeeklyReport projectId="project-1" aiConnection={disconnected} onClose={vi.fn()} />)
 
     expect(screen.getByText(/This week, 1 file\(s\) added, 2 file\(s\) modified/i)).toBeTruthy()
     expect(screen.getByText(/AI를 연결하면 더 친절한 기능 중심 주간 요약/i)).toBeTruthy()
@@ -173,7 +173,7 @@ describe('WeeklyReport', () => {
       error: null
     })
 
-    render(<WeeklyReport projectId="project-1" aiConnection={connected} />)
+    render(<WeeklyReport projectId="project-1" aiConnection={connected} onClose={vi.fn()} />)
 
     expect(screen.getByText(/AI 요약 생성 중/i)).toBeTruthy()
   })
@@ -185,7 +185,7 @@ describe('WeeklyReport', () => {
       error: null
     })
 
-    render(<WeeklyReport projectId="project-1" aiConnection={connected} />)
+    render(<WeeklyReport projectId="project-1" aiConnection={connected} onClose={vi.fn()} />)
 
     expect(screen.getByText(/You improved the upload flow/i)).toBeTruthy()
     expect(screen.getByText('Improved team upload handoff')).toBeTruthy()
@@ -215,14 +215,14 @@ describe('WeeklyReport', () => {
       error: null
     })
 
-    render(<WeeklyReport projectId="project-1" aiConnection={connected} />)
+    render(<WeeklyReport projectId="project-1" aiConnection={connected} onClose={vi.fn()} />)
 
     expect(screen.getByText(/No file changes this week/i)).toBeTruthy()
     expect(screen.getByText(/이번 주에는 아직 저장 기록이 없습니다/i)).toBeTruthy()
   })
 
   it('keeps commit history inside a dedicated scroll region', () => {
-    render(<WeeklyReport projectId="project-1" aiConnection={connected} />)
+    render(<WeeklyReport projectId="project-1" aiConnection={connected} onClose={vi.fn()} />)
 
     const list = screen.getByRole('list', { name: /저장 기록/i })
     expect(list.className).toContain('wr-commit-scroll-region')

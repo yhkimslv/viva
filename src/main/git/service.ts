@@ -1,6 +1,6 @@
 import { access, readFile, rm, writeFile } from 'node:fs/promises'
 import path, { join } from 'node:path'
-import simpleGit, { SimpleGit, StatusResult } from 'simple-git'
+import { simpleGit, type SimpleGit, type StatusResult } from 'simple-git'
 import { validateBranchName } from '../../shared/branchValidation'
 import {
   BranchCreateResult,
@@ -24,7 +24,7 @@ import {
   UntrackedDeleteResult
 } from './types'
 import { mapGitError } from './errors'
-import { buildGithubRemoteUrl, buildPullRequestUrl, injectToken } from './remoteUrls'
+import { buildGithubRemoteUrl, buildPullRequestUrl, githubAuthArgs, parseGithubRepository } from './remoteUrls'
 
 function mapStatusCode(index: string, working: string): { code: FileStatusCode; staged: boolean } {
   const conflictCodes = new Set(['DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU'])
@@ -143,11 +143,16 @@ function resolveProjectPath(projectRoot: string, relativePath: string): string {
 
 export class GitService {
   private git: SimpleGit
+  private discoveryGit: SimpleGit
   private localPath: string
 
   constructor(local_path: string, git?: SimpleGit) {
     this.localPath = local_path
     this.git = git ?? simpleGit(local_path)
+    this.discoveryGit = git ?? simpleGit(local_path, {
+      timeout: { block: 8_000, stdErr: false, stdOut: false },
+      allowEnvironment: ['GIT_TERMINAL_PROMPT']
+    }).env('GIT_TERMINAL_PROMPT', '0')
   }
 
   async isRepository(): Promise<boolean> {
@@ -223,11 +228,10 @@ export class GitService {
       return
     }
 
-    if (existingRemote.fetch === remoteUrl && existingRemote.push === remoteUrl) {
-      return
-    }
-
-    await this.git.raw(['remote', 'set-url', remoteName, remoteUrl])
+    // This remote belongs to VIVA. Replace every URL, including extra pushurls,
+    // so a private backup cannot also be uploaded to an old destination.
+    await this.git.raw(['config', '--replace-all', `remote.${remoteName}.url`, remoteUrl])
+    await this.git.raw(['config', '--replace-all', `remote.${remoteName}.pushurl`, remoteUrl])
   }
 
   private async getCurrentBranchName(): Promise<string> {
@@ -235,7 +239,21 @@ export class GitService {
     return status.current ?? 'HEAD'
   }
 
-  async getDefaultBranch(remoteName = 'origin'): Promise<string | null> {
+  async getDefaultBranch(remoteName = 'origin', token?: string, allowCached = true): Promise<string | null> {
+    // Ask the remote first: a cached origin/HEAD may be absent or out of date.
+    try {
+      const remote = await this.getRemoteDetails(remoteName)
+      if (remote) {
+        const result = await this.discoveryGit.raw([
+          ...githubAuthArgs(remote.fetch, token), 'ls-remote', '--symref', remoteName, 'HEAD'
+        ])
+        const match = result.match(/^ref: refs\/heads\/(.+)\tHEAD$/m)
+        if (match) return match[1]
+      }
+    } catch {
+      // The cached symbolic ref remains useful when the remote is unavailable.
+    }
+    if (!allowCached) return null
     try {
       const symbolic = await this.git.raw([
         'symbolic-ref',
@@ -257,6 +275,43 @@ export class GitService {
     }
   }
 
+  async validateCollaborationRemote(remoteName: string, owner: string, repo: string): Promise<void> {
+    const remote = await this.getRemoteDetails(remoteName)
+    const matches = (url: string): boolean => {
+      const parsed = parseGithubRepository(url)
+      return Boolean(parsed && parsed.owner.toLowerCase() === owner.toLowerCase() &&
+        parsed.repo.toLowerCase() === repo.toLowerCase())
+    }
+    if (!remote || !matches(remote.fetch) || !matches(remote.push)) {
+      throw {
+        code: 'NO_REMOTE',
+        message: 'The team repository remote changed. Choose the upload target again before continuing.'
+      } satisfies GitError
+    }
+    const allUrls = await Promise.all([
+      this.git.raw(['remote', 'get-url', '--all', remoteName]),
+      this.git.raw(['remote', 'get-url', '--push', '--all', remoteName])
+    ])
+    if (allUrls.some((output) => {
+      const urls = output.trim().split(/\r?\n/).filter(Boolean)
+      return urls.length === 0 || urls.some((url) => !matches(url))
+    })) {
+      throw {
+        code: 'NO_REMOTE',
+        message: 'This remote has another repository URL. Choose a single team repository before continuing.'
+      } satisfies GitError
+    }
+  }
+
+  private async assertCurrentBranch(branchName: string): Promise<void> {
+    if (await this.getCurrentBranchName() !== branchName) {
+      throw {
+        code: 'BRANCH_MISMATCH',
+        message: 'The current branch changed. Switch to the configured upload branch or choose the upload target again.'
+      } satisfies GitError
+    }
+  }
+
   private async pushRef(
     remoteName: string,
     refspec: string,
@@ -268,7 +323,7 @@ export class GitService {
     const pushUrl = remoteUrlOverride ?? remote?.push ?? null
 
     if (token && pushUrl?.startsWith('https://')) {
-      await this.git.raw(['push', ...options, injectToken(pushUrl, token), refspec])
+      await this.git.raw([...githubAuthArgs(pushUrl, token), 'push', ...options, remoteName, refspec])
       return
     }
 
@@ -285,35 +340,32 @@ export class GitService {
     const fetchUrl = remote?.fetch ?? null
 
     if (token && fetchUrl?.startsWith('https://')) {
-      await this.git.raw(['pull', injectToken(fetchUrl, token), branchName])
+      await this.git.raw([...githubAuthArgs(fetchUrl, token), 'pull', '--no-rebase', remoteName, branchName])
       return
     }
 
-    await this.git.pull(remoteName, branchName)
+    await this.git.pull(remoteName, branchName, ['--no-rebase'])
   }
 
-  private async deleteRemoteBranch(remoteName: string, branchName: string, token?: string): Promise<void> {
+  private async deleteRemoteBranch(remoteName: string, branchName: string, token?: string, expectedHash?: string): Promise<void> {
     const remote = await this.getRemoteDetails(remoteName)
     const pushUrl = remote?.push ?? null
 
-    if (token && pushUrl?.startsWith('https://')) {
-      await this.git.raw(['push', injectToken(pushUrl, token), '--delete', branchName])
-      return
-    }
-
-    await this.git.raw(['push', remoteName, '--delete', branchName])
+    const lease = expectedHash ? [`--force-with-lease=refs/heads/${branchName}:${expectedHash}`] : []
+    await this.git.raw([
+      ...githubAuthArgs(pushUrl ?? '', token), 'push', ...lease, remoteName, '--delete', branchName
+    ])
   }
 
   private async fetchRef(remoteName: string, branchName: string, token?: string): Promise<void> {
     const remote = await this.getRemoteDetails(remoteName)
     const fetchUrl = remote?.fetch ?? null
 
-    if (token && fetchUrl?.startsWith('https://')) {
-      await this.git.raw(['fetch', injectToken(fetchUrl, token), branchName])
-      return
-    }
-
-    await this.git.fetch(remoteName, branchName)
+    // An explicit destination also updates the named tracking ref when authenticated.
+    const refspec = `+refs/heads/${branchName}:refs/remotes/${remoteName}/${branchName}`
+    await this.git.raw([
+      ...githubAuthArgs(fetchUrl ?? '', token), 'fetch', remoteName, refspec
+    ])
   }
 
   private async hasHeadCommit(): Promise<boolean> {
@@ -441,8 +493,8 @@ export class GitService {
         }
       }
 
-      if (input.branchMode === 'danger_default_branch' && !input.dangerConfirmed) {
-        throw defaultBranchProtectedError()
+      if (input.repoOwner && input.repoName) {
+        await this.validateCollaborationRemote(input.remoteName, input.repoOwner, input.repoName)
       }
 
       const branchValidation = validateBranchName(input.branchName)
@@ -450,11 +502,26 @@ export class GitService {
         throw invalidBranchNameError(branchValidation.message ?? 'Invalid branch name.')
       }
 
+      const defaultBranch = await this.getDefaultBranch(input.remoteName, input.token, false)
+      const isDefault = defaultBranch
+        ? input.branchName === defaultBranch
+        : ['main', 'master'].includes(input.branchName)
+      if ((!defaultBranch || isDefault || input.branchMode === 'danger_default_branch') && !input.dangerConfirmed) {
+        throw defaultBranchProtectedError()
+      }
+
       if (input.branchMode === 'new_branch') {
-        await this.git.checkoutLocalBranch(input.branchName)
+        const branches = await this.git.branchLocal()
+        if (branches.all.includes(input.branchName)) {
+          // Retrying a successful creation or a failed push must not create it again.
+          await this.assertCurrentBranch(input.branchName)
+        } else {
+          await this.git.checkoutLocalBranch(input.branchName)
+        }
         await this.pushRef(input.remoteName, input.branchName, ['-u'], input.token)
       } else {
-        await this.pushRef(input.remoteName, input.branchName, [], input.token)
+        await this.assertCurrentBranch(input.branchName)
+        await this.pushRef(input.remoteName, input.branchName, ['-u'], input.token)
       }
 
       const remote = await this.getRemoteDetails(input.remoteName)
@@ -477,6 +544,10 @@ export class GitService {
 
   async pullConfiguredTarget(input: PullConfiguredTargetInput): Promise<void> {
     try {
+      if (input.repoOwner && input.repoName) {
+        await this.validateCollaborationRemote(input.remoteName, input.repoOwner, input.repoName)
+      }
+      await this.assertCurrentBranch(input.branchName)
       await this.pullRef(input.remoteName, input.branchName, input.token)
     } catch (err) {
       if (isGitError(err)) {
@@ -489,6 +560,10 @@ export class GitService {
 
   async previewPullUpdates(input: PullConfiguredTargetInput, limit = 20): Promise<PullUpdatesPreview> {
     try {
+      if (input.repoOwner && input.repoName) {
+        await this.validateCollaborationRemote(input.remoteName, input.repoOwner, input.repoName)
+      }
+      await this.assertCurrentBranch(input.branchName)
       await this.fetchRef(input.remoteName, input.branchName, input.token)
 
       const remoteRef = `${input.remoteName}/${input.branchName}`
@@ -582,7 +657,7 @@ export class GitService {
         const pushUrl = remotes.find((remote) => remote.name === 'origin')?.refs?.push
 
         if (pushUrl?.startsWith('https://')) {
-          await this.git.raw(['push', injectToken(pushUrl, token), 'HEAD'])
+          await this.git.raw([...githubAuthArgs(pushUrl, token), 'push', 'origin', 'HEAD'])
           return
         }
       }
@@ -600,7 +675,7 @@ export class GitService {
         const fetchUrl = remotes.find((remote) => remote.name === 'origin')?.refs?.fetch
 
         if (fetchUrl?.startsWith('https://')) {
-          await this.git.raw(['pull', injectToken(fetchUrl, token)])
+          await this.git.raw([...githubAuthArgs(fetchUrl, token), 'pull', '--no-rebase', 'origin'])
           return
         }
       }
@@ -626,7 +701,7 @@ export class GitService {
 
   async createBranch(
     name: string,
-    options?: { remoteName?: string; token?: string; publishRemote?: boolean }
+    options?: { remoteName?: string; token?: string; publishRemote?: boolean; repoOwner?: string; repoName?: string }
   ): Promise<BranchCreateResult> {
     try {
       const branchValidation = validateBranchName(name)
@@ -659,6 +734,11 @@ export class GitService {
       }
 
       try {
+        if (options?.repoOwner && options.repoName) {
+          await this.validateCollaborationRemote(remoteName, options.repoOwner, options.repoName)
+        }
+        const defaultBranch = await this.getDefaultBranch(remoteName, options?.token, false)
+        if (!defaultBranch || name === defaultBranch) throw defaultBranchProtectedError()
         await this.pushRef(remoteName, name, ['-u'], options?.token)
         return {
           name,
@@ -667,7 +747,7 @@ export class GitService {
           publish_error: null
         }
       } catch (publishError) {
-        const mapped = mapGitError(publishError)
+        const mapped = isGitError(publishError) ? publishError : mapGitError(publishError)
         return {
           name,
           published: false,
@@ -707,29 +787,77 @@ export class GitService {
 
   async deleteBranch(
     name: string,
-    options?: { remoteName?: string; token?: string; deleteRemote?: boolean }
+    options?: { remoteName?: string; token?: string; deleteRemote?: boolean; repoOwner?: string; repoName?: string }
   ): Promise<BranchDeleteResult> {
     try {
       const remoteName = options?.remoteName?.trim() || 'origin'
-      const protectedBranch = await this.getDefaultBranch(remoteName)
-      if (protectedBranch && name === protectedBranch) {
+      const protectedBranch = await this.getDefaultBranch(remoteName, options?.token, !options?.deleteRemote)
+      if ((options?.deleteRemote && !protectedBranch) || name === protectedBranch ||
+        (!protectedBranch && ['main', 'master'].includes(name))) {
         throw {
-          code: 'UNKNOWN',
-          message: `The "${protectedBranch}" branch is protected and cannot be deleted.`
+          code: 'DEFAULT_BRANCH_PROTECTED',
+          message: protectedBranch
+            ? `The "${protectedBranch}" branch is protected and cannot be deleted.`
+            : 'The default branch could not be verified. Reconnect before deleting a branch.'
         } satisfies GitError
       }
 
-      await this.git.deleteLocalBranch(name, true)
+      if (options?.deleteRemote && options.repoOwner && options.repoName) {
+        await this.validateCollaborationRemote(remoteName, options.repoOwner, options.repoName)
+      }
+      // Git -d alone also accepts a branch merged only into its own upstream,
+      // which is insufficient when the same action deletes that remote branch.
+      const assertMerged = async (ref: string): Promise<string> => {
+        try {
+          const branchHash = (await this.git.revparse([ref])).trim()
+          const mergeBase = (await this.git.raw(['merge-base', ref, 'HEAD'])).trim()
+          if (!branchHash || mergeBase !== branchHash) throw new Error('Branch is not merged into HEAD.')
+          return branchHash
+        } catch {
+          throw {
+            code: 'BRANCH_NOT_MERGED',
+            message: 'Merge this branch into the current branch before deleting it. Its saved work is still separate.'
+          } satisfies GitError
+        }
+      }
+      await assertMerged(`refs/heads/${name}`)
+      let expectedRemoteHash: string | undefined
+      let remoteAlreadyAbsent = false
+      const configuredRemote = options?.deleteRemote ? await this.getRemoteDetails(remoteName) : null
+      if (configuredRemote) {
+        try {
+          await this.fetchRef(remoteName, name, options?.token)
+        } catch (fetchError) {
+          // GitHub can remove the branch after a PR merge. Confirm absence
+          // against the remote, rather than treating an authentication failure
+          // or an outdated tracking ref as proof that it was removed.
+          let advertisedRefs: string
+          try {
+            advertisedRefs = await this.discoveryGit.raw([
+              ...githubAuthArgs(configuredRemote.fetch, options?.token),
+              'ls-remote', '--heads', remoteName, `refs/heads/${name}`
+            ])
+          } catch {
+            throw fetchError
+          }
+          if (advertisedRefs.trim()) throw fetchError
+          remoteAlreadyAbsent = true
+        }
+        if (!remoteAlreadyAbsent) {
+          expectedRemoteHash = await assertMerged(`refs/remotes/${remoteName}/${name}`)
+        }
+      }
+      await this.git.deleteLocalBranch(name, false)
       const currentBranch = await this.getCurrentBranchName()
 
       const deleteRemote = options?.deleteRemote ?? false
 
-      if (!deleteRemote) {
+      if (!deleteRemote || remoteAlreadyAbsent) {
         return {
           name,
           current_branch: currentBranch,
           local_deleted: true,
-          remote_name: null,
+          remote_name: remoteAlreadyAbsent ? remoteName : null,
           remote_deleted: false,
           remote_delete_error: null
         }
@@ -748,7 +876,7 @@ export class GitService {
       }
 
       try {
-        await this.deleteRemoteBranch(remoteName, name, options?.token)
+        await this.deleteRemoteBranch(remoteName, name, options?.token, expectedRemoteHash)
         return {
           name,
           current_branch: currentBranch,
@@ -769,6 +897,7 @@ export class GitService {
         }
       }
     } catch (err) {
+      if (isGitError(err)) throw err
       throw mapGitError(err)
     }
   }

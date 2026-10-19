@@ -60,22 +60,24 @@ describe('ActionPanel natural undo flow', () => {
           is_clean: true
         }}
         loading={false}
+        aiLoading={false}
         error={null}
-        messageTemplate=""
+        message=""
         tokenExists={true}
         cloudUploadReady={true}
-        deviceFlow={null}
         naturalUndoEnabled={true}
+        onMessageChange={vi.fn()}
+        onSuggestMessage={vi.fn()}
+        naturalUndoSuggestion={null}
+        naturalUndoLoading={false}
+        naturalUndoApplying={false}
+        naturalUndoError={null}
         onCommit={vi.fn()}
         onPush={vi.fn()}
         onPull={vi.fn()}
         onOpenCloudSetup={vi.fn()}
         onClearError={vi.fn()}
-        onConnectGitHub={vi.fn()}
-        onOpenGitHubDocs={vi.fn()}
-        onOpenDevicePage={vi.fn()}
-        onStartDeviceFlow={vi.fn()}
-        onCancelDeviceFlow={vi.fn()}
+        onOpenGitHubConnect={vi.fn()}
         onSuggestNaturalUndo={onSuggestNaturalUndo}
       />
     )
@@ -101,22 +103,24 @@ describe('ActionPanel natural undo flow', () => {
           is_clean: true
         }}
         loading={false}
+        aiLoading={false}
         error={null}
-        messageTemplate=""
+        message=""
         tokenExists={true}
         cloudUploadReady={true}
-        deviceFlow={null}
         naturalUndoEnabled={false}
+        onMessageChange={vi.fn()}
+        onSuggestMessage={vi.fn()}
+        naturalUndoSuggestion={null}
+        naturalUndoLoading={false}
+        naturalUndoApplying={false}
+        naturalUndoError={null}
         onCommit={vi.fn()}
         onPush={vi.fn()}
         onPull={vi.fn()}
         onOpenCloudSetup={vi.fn()}
         onClearError={vi.fn()}
-        onConnectGitHub={vi.fn()}
-        onOpenGitHubDocs={vi.fn()}
-        onOpenDevicePage={vi.fn()}
-        onStartDeviceFlow={vi.fn()}
-        onCancelDeviceFlow={vi.fn()}
+        onOpenGitHubConnect={vi.fn()}
       />
     )
 

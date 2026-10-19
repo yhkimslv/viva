@@ -46,7 +46,18 @@ function getProjectPath(projectId: string): string {
   return project.local_path
 }
 
-function getConnectedAiConfig(): { provider: AiProviderName; apiKey: string; model: string } {
+function requireProjectAiConsent(projectId: string): void {
+  if (getProjectAiSettings(projectId).ai_diff_consent_granted) return
+
+  throw new Error(
+    getAiOutputLanguage() === 'ko'
+      ? '이 프로젝트의 AI 기능을 사용하려면 프로젝트 설정에서 AI 데이터 공유를 허용하세요.'
+      : 'Allow AI data sharing in Project Settings before using AI tools for this project.'
+  )
+}
+
+function getConnectedAiConfig(projectId: string): { provider: AiProviderName; apiKey: string; model: string } {
+  requireProjectAiConsent(projectId)
   const connectionState = getAiConnectionState()
   const apiKey = getAiApiKey()
 
@@ -168,6 +179,7 @@ export function registerAiHandlers(): void {
     },
 
     generateCommitSuggestion: async (project_id: string) => {
+    requireProjectAiConsent(project_id)
     const connectionState = getAiConnectionState()
     const apiKey = getAiApiKey()
 
@@ -188,7 +200,7 @@ export function registerAiHandlers(): void {
 
   registerAiManualToolHandlers({
     suggestUndo: async (project_id: string, query: string) => {
-    const aiConfig = getConnectedAiConfig()
+    const aiConfig = getConnectedAiConfig(project_id)
     const service = getGitService(project_id)
 
     return generateNaturalUndoSuggestion({
@@ -204,7 +216,7 @@ export function registerAiHandlers(): void {
 
     generateFileInsight: async (project_id: string, file_path: string) => {
     const projectRoot = getProjectPath(project_id)
-    const aiConfig = getConnectedAiConfig()
+    const aiConfig = getConnectedAiConfig(project_id)
     const service = getGitService(project_id)
 
     return generateFileInsight({
@@ -218,7 +230,7 @@ export function registerAiHandlers(): void {
     },
 
     reviewUntracked: async (project_id: string) => {
-    const aiConfig = getConnectedAiConfig()
+    const aiConfig = getConnectedAiConfig(project_id)
     const projectRoot = getProjectPath(project_id)
     const service = getGitService(project_id)
 
@@ -234,6 +246,7 @@ export function registerAiHandlers(): void {
 
   registerAiConflictHandlers({
     analyzeConflict: async (project_id: string, filePath: string) => {
+      requireProjectAiConsent(project_id)
       const connectionState = getAiConnectionState()
       const apiKey = getAiApiKey()
 
@@ -268,7 +281,7 @@ export function registerAiHandlers(): void {
 
   registerAiWeeklyHandlers({
     generateWeeklySummary: async (project_id: string, startDate: string, endDate: string) => {
-      const aiConfig = getConnectedAiConfig()
+      const aiConfig = getConnectedAiConfig(project_id)
 
       const project = listProjects().find((p) => p.project_id === project_id)
       if (!project) {

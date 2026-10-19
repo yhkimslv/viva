@@ -8,7 +8,6 @@ publish:
 
 directories:
   output: dist
-  buildResources: resources
 
 files:
   - out/**/*
@@ -20,7 +19,6 @@ win:
   target:
     - target: nsis
       arch: [x64]
-  icon: resources/icon.ico
 
 nsis:
   oneClick: false
@@ -33,7 +31,6 @@ mac:
   target:
     - target: dmg
       arch: [universal]
-  icon: resources/icon.icns
   category: public.app-category.developer-tools
 
 dmg:
@@ -44,5 +41,4 @@ linux:
   target:
     - target: AppImage
       arch: [x64]
-  icon: resources/icon.png
   category: Development

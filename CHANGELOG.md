@@ -7,6 +7,21 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- Repeat team uploads, stale branch/repository targets, authenticated update previews, and concurrent Git operations
+- Default branch protection and deletion safety for unmerged local or teammate work
+- Merge completion after conflict resolution, manual staging, and retryable operation errors
+- Project isolation for file status and update previews; Git metadata and dotfile change notifications
+- Project AI consent enforcement and GitHub login cancellation
+- GitHub credentials no longer stored in upstream URLs and redacted from Git errors
+- Actual source typechecking and production build validation in CI
+
+### Changed
+- Updated simple-git to 4.0.2 with scoped authentication and explicit safe environment configuration
+- Added a team workflow guide, readiness review, and PR template
+
 ## [0.1.0] — 2025-05-08
 
 ### Added

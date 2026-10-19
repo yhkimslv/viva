@@ -62,7 +62,6 @@ describe('ActionPanel AI save flow', () => {
         error={null}
         message=""
         tokenExists={true}
-        deviceFlow={null}
         cloudUploadReady={true}
         aiAutoSaveEnabled={true}
         aiConnectionReady={true}
@@ -78,11 +77,7 @@ describe('ActionPanel AI save flow', () => {
         onPull={vi.fn()}
         onOpenCloudSetup={vi.fn()}
         onClearError={vi.fn()}
-        onConnectGitHub={vi.fn()}
-        onOpenGitHubDocs={vi.fn()}
-        onOpenDevicePage={vi.fn()}
-        onStartDeviceFlow={vi.fn()}
-        onCancelDeviceFlow={vi.fn()}
+        onOpenGitHubConnect={vi.fn()}
         onGenerateAutoMessage={onGenerateAutoMessage}
       />
     )

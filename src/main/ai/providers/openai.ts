@@ -24,7 +24,7 @@ interface OpenAiResponsesResponse {
   }>
 }
 
-function getHeaders(apiKey: string): HeadersInit {
+function getHeaders(apiKey: string): Record<string, string> {
   return {
     Authorization: `Bearer ${apiKey}`,
     'Content-Type': 'application/json'
