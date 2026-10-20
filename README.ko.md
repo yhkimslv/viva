@@ -44,28 +44,24 @@ UI에서 shell 명령어를 직접 입력할 필요는 없습니다.
 ## 설치
 
 ### Windows
-1. [Releases page](../../releases)에서 `VIVA-Setup.exe`를 다운로드합니다
-2. installer를 실행합니다
-3. **VIVA**를 실행합니다
+
+1. [팀 테스트 릴리스](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.1)에서 `VIVA-*-windows-x64-setup.exe`를 내려받습니다.
+2. 설치 마법사를 진행합니다. 관리자 권한을 요청하지 않고 현재 사용자용으로 설치합니다.
+3. 바탕화면 또는 시작 메뉴에서 **VIVA**를 엽니다.
 
 ### macOS
-1. [Releases page](../../releases)에서 `VIVA.dmg`를 다운로드합니다
-2. 앱을 Applications 폴더로 드래그합니다
-3. Applications에서 앱을 실행합니다
+
+1. [팀 테스트 릴리스](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.1)에서 Apple Silicon은 `VIVA-*-mac-arm64.dmg`, Intel은 `VIVA-*-mac-x64.dmg`를 내려받습니다.
+2. DMG를 열고 **VIVA**를 Applications 폴더로 드래그합니다.
+3. Applications에서 VIVA를 엽니다. macOS 13 이상이 필요합니다.
 
 ### Linux
-1. [Releases page](../../releases)에서 `VIVA.AppImage`를 다운로드합니다
-2. 실행 권한을 부여합니다: `chmod +x VIVA.AppImage`
-3. 앱을 실행합니다: `./VIVA.AppImage`
 
-> **필수 조건:** 컴퓨터에 Git이 설치되어 있어야 합니다.
-> - Windows: [git-scm.com](https://git-scm.com/download/win)
-> - macOS: `xcode-select --install`로 Xcode Command Line Tools 설치
-> - Linux: package manager로 `git` 설치
->
-> Git이 감지되지 않으면 앱이 setup guide를 보여주고, 설치 후 다시 확인할 수 있게 합니다.
+이번 팀 테스트 릴리스는 macOS와 Windows 설치 파일을 제공합니다. Linux는 개발 환경에서 소스 빌드를 사용할 수 있습니다.
 
-현재 개발 브랜치는 macOS 13 이상과 개발용 Node.js 24 LTS를 기준으로 합니다. Electron 44 업데이트는 다음 릴리스부터 적용됩니다.
+**팀 테스트용:** Windows는 미서명, macOS는 임시 서명·미공증 파일이므로 OS 확인 단계가 필요할 수 있습니다. 관리 기기에서는 실행이 제한될 수 있습니다. [설치와 보안 확인 안내](docs/releases/v0.3.0-beta.1.md)를 함께 확인하세요.
+
+**Git은 별도 설치가 필요합니다.** 앱에서 Git for Windows와 Apple Command Line Tools의 그래픽 설치 안내를 제공합니다. 설치 후 VIVA를 다시 열어 Git을 확인하고, **프로젝트 설정**에서 작성자 이름·이메일을 저장하세요. 해당 프로젝트에만 적용합니다. 설치 파일을 사용하는 팀원에게 Node.js·npm·터미널 명령어는 필요하지 않습니다. 소스 개발 환경은 Node.js 24 LTS입니다.
 
 ---
 

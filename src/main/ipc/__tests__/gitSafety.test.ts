@@ -7,7 +7,8 @@ const mocks = vi.hoisted(() => ({
   service: {
     pushConfiguredTarget: vi.fn(), pullConfiguredTarget: vi.fn(), previewPullUpdates: vi.fn(),
     createBranch: vi.fn(), switchBranch: vi.fn(), deleteBranch: vi.fn(), getDefaultBranch: vi.fn(),
-    resolveConflict: vi.fn(), validateCollaborationRemote: vi.fn(), getStatus: vi.fn(), stage: vi.fn()
+    resolveConflict: vi.fn(), validateCollaborationRemote: vi.fn(), getStatus: vi.fn(), stage: vi.fn(),
+    getIdentity: vi.fn(), setIdentity: vi.fn()
   },
   validateTokenForRepository: vi.fn(),
   invalidateCache: vi.fn()
@@ -49,6 +50,24 @@ beforeEach(() => {
 })
 
 describe('git IPC collaboration safety', () => {
+  it('serializes author updates with Git operations and keeps author reads read-only', async () => {
+    let finish!: () => void
+    mocks.service.stage.mockReturnValue(new Promise<void>((resolve) => { finish = resolve }))
+    mocks.service.setIdentity.mockResolvedValue({ name: { value: 'Local', scope: 'local' } })
+    mocks.service.getIdentity.mockResolvedValue({ name: { value: 'Local', scope: 'local' } })
+    const staging = invoke('git:stage', ['README.md'])
+    const updating = invoke('git:identity:set', { name: 'Local', email: 'local@example.test' })
+    const reading = invoke('git:identity:get')
+    await vi.waitFor(() => expect(mocks.service.stage).toHaveBeenCalled())
+    expect(mocks.service.setIdentity).not.toHaveBeenCalled()
+    expect(mocks.service.getIdentity).not.toHaveBeenCalled()
+    finish()
+    await Promise.all([staging, updating, reading])
+    expect(mocks.service.setIdentity).toHaveBeenCalledWith({ name: 'Local', email: 'local@example.test' })
+    const before = mocks.invalidateCache.mock.calls.length
+    await invoke('git:identity:get')
+    expect(mocks.invalidateCache).toHaveBeenCalledTimes(before)
+  })
   it('promotes a new upload target to existing only after a successful upload', async () => {
     mocks.state.target = collaboration()
     mocks.service.pushConfiguredTarget.mockResolvedValue({ remoteName: 'origin', branchName: 'feature/work', prUrl: 'https://github.com/team/project/compare/feature%2Fwork' })

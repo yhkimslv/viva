@@ -9,6 +9,6 @@ export function registerDialogHandlers(): void {
 
   // Open a URL in the user's default browser
   ipcMain.handle('shell:openExternal', (_event, url: string) => {
-    shell.openExternal(url)
+    return shell.openExternal(url)
   })
 }

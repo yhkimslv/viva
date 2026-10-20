@@ -1,8 +1,11 @@
 import { AiConnectionStatus, ProjectAiSettings, ProjectCloudTarget } from '../../types'
 import { useTerms } from '../../hooks/useTerms'
+import { GitIdentitySettings } from '../GitIdentitySettings/GitIdentitySettings'
 import styles from './ProjectSettingsPanel.module.css'
 
 interface Props {
+  projectId?: string | null
+  language?: 'en' | 'ko'
   aiSettings: ProjectAiSettings
   aiConnectionStatus: AiConnectionStatus
   selectedModel: string | null
@@ -34,6 +37,8 @@ function getCloudStatusLabel(
 }
 
 export function ProjectSettingsPanel({
+  projectId,
+  language,
   aiSettings,
   aiConnectionStatus,
   selectedModel,
@@ -61,6 +66,8 @@ export function ProjectSettingsPanel({
           ×
         </button>
       </div>
+
+      {projectId && <GitIdentitySettings key={projectId} projectId={projectId} language={language} />}
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>{t.aiSaveMessagesTitle}</h3>

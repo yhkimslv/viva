@@ -7,6 +7,7 @@
   justify-content: center;
   z-index: 9999;
   padding: 24px;
+  overflow-y: auto;
 }
 
 .card {
@@ -14,8 +15,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  max-width: 420px;
+  max-width: 720px;
   width: 100%;
+  margin: auto;
 }
 
 .icon {
@@ -37,37 +39,37 @@
   margin-bottom: 28px;
 }
 
-.steps {
+.platforms {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 28px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
   text-align: left;
 }
 
-.step {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--text);
-  line-height: 1.5;
+.platform {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
-.stepNum {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
+.platformTitle {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.steps {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 1px;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 18px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
 }
 
 .link {
@@ -79,6 +81,19 @@
 }
 .link:hover { color: var(--accent-hover); }
 
+.note,
+.error {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.error {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
 .retryBtn {
   padding: 10px 24px;
   background: var(--accent);
@@ -89,3 +104,9 @@
   transition: background var(--transition);
 }
 .retryBtn:hover { background: var(--accent-hover); }
+
+@media (max-width: 600px) {
+  .platforms { grid-template-columns: 1fr; }
+  .icon { font-size: 36px; margin-bottom: 10px; }
+  .description { margin-bottom: 20px; }
+}

@@ -38,7 +38,9 @@ afterEach(async () => {
   await Promise.all(directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })))
 })
 
-describe('collaboration with real local git repositories', () => {
+// These tests spawn real Git processes. Windows CI runs can exceed Vitest's
+// five-second default, which also interrupts Git before fixture cleanup.
+describe('collaboration with real local git repositories', { timeout: 30_000 }, () => {
   it('uploads the same work branch twice and keeps a named, credential-free upstream', async () => {
     const { work, remote, service } = await fixture()
     // Exercise the HTTPS authentication code without contacting the network.

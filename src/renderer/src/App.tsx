@@ -911,6 +911,8 @@ function Shell(): JSX.Element {
         {showProjectSettingsPanel && activeProject && (
           <FloatingPanel onClose={() => setShowProjectSettingsPanel(false)}>
             <ProjectSettingsPanel
+              projectId={activeProject.project_id}
+              language={preferences.language}
               aiSettings={projectAiSettings}
               aiConnectionStatus={connectionStatus.connection_status}
               selectedModel={connectionStatus.selected_model}
