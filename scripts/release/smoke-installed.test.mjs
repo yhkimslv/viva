@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { test } from 'node:test'
-import { findInstaller, parseArguments, requireIsolationHook } from './smoke-installed.mjs'
+import { findInstaller, parseArguments, prepareUninstaller, requireIsolationHook } from './smoke-installed.mjs'
 
 async function fixture(run) {
   const directory = await mkdtemp(join(tmpdir(), 'viva-release-script-test-'))
@@ -47,4 +47,19 @@ test('refuses an older package before it can read a developer profile', () => fi
   await assert.rejects(requireIsolationHook(archive), /early VIVA_USER_DATA_DIR hook/)
   await writeFile(archive, 'application main using VIVA_USER_DATA_DIR')
   await requireIsolationHook(archive)
+}))
+
+test('runs a copied uninstaller outside the installation with synchronous NSIS arguments', () => fixture(async (directory) => {
+  const installation = join(directory, 'install with spaces')
+  await mkdir(installation)
+  const original = join(installation, 'Uninstall VIVA.exe')
+  await writeFile(original, 'disposable uninstaller fixture')
+
+  const plan = await prepareUninstaller(installation, directory)
+
+  assert.equal(dirname(plan.executable), directory)
+  assert.notEqual(dirname(plan.executable), installation)
+  assert.equal(await readFile(plan.executable, 'utf8'), await readFile(original, 'utf8'))
+  assert.deepEqual(plan.args, ['/S', '/currentuser', `_?=${installation}`])
+  assert.ok(!plan.args.at(-1).includes('"'), 'NSIS consumes the final _?= path without quotes.')
 }))

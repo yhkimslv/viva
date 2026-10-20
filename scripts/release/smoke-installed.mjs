@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { createWriteStream } from 'node:fs'
-import { access, mkdir, mkdtemp, readdir, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises'
+import { access, copyFile, mkdir, mkdtemp, readdir, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, extname, join, resolve, win32 } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -53,6 +53,15 @@ export async function requireIsolationHook(asarPath) {
   const archive = await readFile(asarPath)
   assert.ok(archive.includes(Buffer.from('VIVA_USER_DATA_DIR')),
     'Package lacks the early VIVA_USER_DATA_DIR hook. Rebuild before running a local smoke test.')
+}
+
+export async function prepareUninstaller(installationDirectory, runtimeDirectory) {
+  // NSIS normally launches a temporary second process and exits immediately.
+  // Running our own disposable copy with _?= keeps execution synchronous and
+  // lets the uninstaller remove the original executable and installation tree.
+  const executable = join(runtimeDirectory, 'uninstall-viva.exe')
+  await copyFile(join(installationDirectory, 'Uninstall VIVA.exe'), executable)
+  return { executable, args: ['/S', '/currentuser', `_?=${installationDirectory}`] }
 }
 
 async function exists(path) {
@@ -278,7 +287,16 @@ export async function smokeInstalled(options) {
     await killOwnedProcess(appProcess)
     appLogStreams.forEach((stream) => stream.end())
     if (installationDirectory && await exists(join(installationDirectory, 'Uninstall VIVA.exe'))) {
-      try { await command(join(installationDirectory, 'Uninstall VIVA.exe'), ['/S'], join(artifactsDir, 'nsis-uninstall.log')) }
+      try {
+        const uninstall = await prepareUninstaller(installationDirectory, runtimeDir)
+        await writeFile(join(artifactsDir, 'nsis-uninstall-request.json'), `${JSON.stringify(uninstall, null, 2)}\n`)
+        const powershell = win32.join(process.env.SystemRoot || process.env.WINDIR || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+        const script = '$ErrorActionPreference="Stop"; $arguments=ConvertFrom-Json -InputObject $env:VIVA_SMOKE_UNINSTALL_ARGS; $p=Start-Process -FilePath $env:VIVA_SMOKE_UNINSTALLER -ArgumentList $arguments -Wait -PassThru; exit $p.ExitCode'
+        await command(powershell, ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], join(artifactsDir, 'nsis-uninstall.log'), {
+          env: { ...process.env, VIVA_SMOKE_UNINSTALLER: uninstall.executable, VIVA_SMOKE_UNINSTALL_ARGS: JSON.stringify(uninstall.args) }
+        })
+        assert.ok(!await exists(join(installationDirectory, 'VIVA.exe')), 'NSIS did not remove the installed executable.')
+      }
       catch (error) { cleanupFailures.push(error.message) }
     }
     if (mountedDirectory) {
