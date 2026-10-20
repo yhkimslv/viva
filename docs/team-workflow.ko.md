@@ -2,6 +2,8 @@
 
 VIVA는 각 팀원의 컴퓨터에서 저장소를 내려받고 변경사항을 저장·공유하는 도구입니다. 리드 대시보드에서 팀의 리뷰와 CI 현황을 확인하고, 실제 검토·병합은 GitHub Pull Request에서 진행합니다. 작업 배정과 마감일은 GitHub 이슈나 팀 보드에 기록하세요.
 
+앱을 처음 설치한다면 [한국어 사용 가이드](user-guide.ko.md) 또는 [English guide](user-guide.en.md)에서 설치·GitHub 연결·첫 clone을 완료한 뒤 이 운영 흐름을 진행하세요.
+
 ## 첫 프로젝트 연결
 
 1. Git 설치와 팀 저장소 접근 권한을 확인합니다. Git이 없으면 VIVA의 설치 안내에서 Windows는 **Git for Windows 열기**, macOS는 **Apple Additional tools 열기**를 선택하고 설치 화면을 따릅니다. macOS는 Apple 계정으로 로그인해 사용 중인 macOS에 맞는 Command Line Tools for Xcode를 내려받습니다. 유료 개발자 멤버십은 필요하지 않습니다. 설치 후 VIVA를 다시 열고 **Git 설치 다시 확인**을 누릅니다.
