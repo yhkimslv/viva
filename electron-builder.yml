@@ -17,21 +17,26 @@ files:
 
 # Windows — NSIS installer
 win:
+  artifactName: VIVA-${version}-windows-${arch}-setup.${ext}
   target:
     - target: nsis
       arch: [x64]
 
 nsis:
   oneClick: false
+  perMachine: false
+  allowElevation: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
 
-# macOS — universal DMG (single binary for Intel + Apple Silicon)
+# macOS — separate native installers for Apple Silicon and Intel
 mac:
+  artifactName: VIVA-${version}-mac-${arch}.${ext}
+  minimumSystemVersion: '13.0'
   target:
     - target: dmg
-      arch: [universal]
+      arch: [arm64, x64]
   category: public.app-category.developer-tools
 
 dmg:

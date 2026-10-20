@@ -5,6 +5,7 @@ import { addAiCommitSummary, AiCommitChangeKind } from '../db/aiSummaries'
 import { getCachedStatus, setCachedStatus, invalidateCache } from '../db/statusCache'
 import { getGithubToken } from '../db/credentials'
 import { getProjectCloudTarget, setProjectCloudTarget } from '../db/projectCloudTargets'
+import type { GitIdentityInput } from '../../shared/gitIdentity'
 import {
   GitError,
   PullConfiguredTargetInput,
@@ -26,7 +27,7 @@ interface CommitAiMetadata {
 const projectOperations = new Map<string, Promise<void>>()
 const readOnlyChannels = new Set([
   'git:status', 'git:files:tracked', 'git:branches', 'git:branch:default',
-  'git:conflict:versions', 'git:log', 'git:timeline', 'git:restore:preview'
+  'git:conflict:versions', 'git:log', 'git:timeline', 'git:restore:preview', 'git:identity:get'
 ])
 
 /** Keep each multi-command operation and its target metadata in one project transaction. */
@@ -136,6 +137,9 @@ function getPullTarget(project_id: string, token?: string): PullConfiguredTarget
 }
 
 export function registerGitHandlers(): void {
+  handleProject('git:identity:get', (_event, projectId: string) => run(() => getGitService(projectId).getIdentity()))
+  handleProject('git:identity:set', (_event, projectId: string, input: GitIdentityInput) => run(() => getGitService(projectId).setIdentity(input)))
+
   // Check whether git is installed and reachable on PATH
   ipcMain.handle('git:install:check', async () => {
     try {

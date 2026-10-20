@@ -1,3 +1,4 @@
+import './config/userData'
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'

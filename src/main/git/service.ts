@@ -2,6 +2,8 @@ import { access, readFile, rm, writeFile } from 'node:fs/promises'
 import path, { join } from 'node:path'
 import { simpleGit, type SimpleGit, type StatusResult } from 'simple-git'
 import { validateBranchName } from '../../shared/branchValidation'
+import { GitIdentity, GitIdentityInput } from '../../shared/gitIdentity'
+import { readGitIdentity, saveGitIdentity } from './identity'
 import {
   BranchCreateResult,
   BranchDeleteResult,
@@ -169,6 +171,16 @@ export class GitService {
     } catch (err) {
       throw mapGitError(err)
     }
+  }
+
+  async getIdentity(): Promise<GitIdentity> {
+    try { return await readGitIdentity(this.git) }
+    catch (error) { throw isGitError(error) ? error : mapGitError(error) }
+  }
+
+  async setIdentity(input: GitIdentityInput): Promise<GitIdentity> {
+    try { return await saveGitIdentity(this.git, input) }
+    catch (error) { throw isGitError(error) ? error : mapGitError(error) }
   }
 
   async getRemotes(): Promise<Array<{ name: string; fetch: string; push: string }>> {

@@ -9,7 +9,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0-beta.1] — 2026-10-19
+
 ### Added
+- macOS Apple Silicon/Intel DMGs and Windows x64 installer for the team preview
+- Graphical Git installation guidance and project-local commit author settings
+- Native installation/startup gates and complete-release upload with SHA-256 checksums
 - In-app GitHub HTTPS clone with progress, cancellation, exclusive destination writes, and recovery guidance
 - Read-only lead dashboard for PRs, review requests, CI, assigned team issues, and workflow runs
 - Ubuntu and Windows CI with an audit gate covering all dependencies
