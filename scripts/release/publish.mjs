@@ -4,6 +4,7 @@ import { createReadStream, existsSync, mkdtempSync, readdirSync, rmSync, statSyn
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { releaseMetadata } from './metadata.mjs'
+import { readDraftRelease } from './read-draft.mjs'
 
 const { version, tag, prerelease } = releaseMetadata()
 const repository = process.env.GITHUB_REPOSITORY
@@ -57,7 +58,7 @@ if (!existing) {
 }
 // Replacing an upload is allowed only while the release is still a draft.
 gh(['release', 'upload', tag, '--repo', repository, '--clobber', ...assets.map(name => resolve(directory, name))])
-const uploaded = JSON.parse(gh(['api', `repos/${repository}/releases/tags/${tag}`]))
+const uploaded = readDraftRelease(gh, repository, tag)
 if (!uploaded.draft || uploaded.assets.length !== assets.length) throw new Error('Unexpected draft release contents')
 for (const name of assets) {
   const asset = uploaded.assets.find(item => item.name === name)
