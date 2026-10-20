@@ -11,6 +11,8 @@ VIVA(Visual Interface for Version Assistance)는 코드를 안전하고 쉽게 �
 
 AI 도구로 코드를 생성하지만 이를 안정적으로 관리할 방법이 필요한 바이브 코더, 디자이너, 학생, 초기 개발자를 위해 만들었습니다.
 
+처음 설치하는 팀원은 [한국어 사용 가이드](docs/user-guide.ko.md) 또는 [English guide](docs/user-guide.en.md)에서 macOS·Windows 설치, Git 준비, GitHub 로그인과 첫 저장소 clone을 순서대로 진행하세요.
+
 팀 프로젝트를 시작한다면 [팀 운영 가이드](docs/team-workflow.ko.md)에서 연결, 작업 브랜치, PR 리뷰, 충돌 해결 흐름을 확인하세요.
 
 [팀 사용 점검 결과](docs/superpowers/reports/2026-10-19-team-readiness.md)에는 이번 수정과 배포 전 남은 과제를 정리했습니다.

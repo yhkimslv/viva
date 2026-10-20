@@ -11,6 +11,8 @@ VIVA (Visual Interface for Version Assistance) is a local-first desktop app that
 
 Built for vibe coders, designers, students, and early-stage developers who generate code with AI tools but need a reliable way to manage it.
 
+Installing the team preview? Follow the user guide in [English](docs/user-guide.en.md) or [한국어](docs/user-guide.ko.md) for macOS/Windows installation, Git setup, GitHub login, and cloning your first project.
+
 For team projects, see the [team workflow guide in Korean](docs/team-workflow.ko.md) and the [team readiness review](docs/superpowers/reports/2026-10-19-team-readiness.md).
 
 ---
