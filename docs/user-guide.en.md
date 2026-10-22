@@ -1,8 +1,8 @@
 # VIVA installation and first project guide
 
-For the **VIVA 0.3.0-beta.1 team preview**. Follow these six steps: install VIVA, install Git if needed, connect GitHub, clone your project, check your commit author, and open the dashboard. You do not need Node.js, npm, or terminal commands.
+For the **VIVA 0.3.0-beta.2 team preview**. Follow these six steps: install VIVA, install Git if needed, connect GitHub, clone your project, check your commit author, and open the dashboard. You do not need Node.js, npm, or terminal commands.
 
-[한국어 안내](user-guide.ko.md) · [Download release](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.1)
+[한국어 안내](user-guide.ko.md) · [Download release](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.2)
 
 Use your own GitHub account. Ask your project lead for the **team repository HTTPS URL** and accept any repository invitation before starting. Being signed in does not itself give you access to a private team repository.
 
@@ -12,9 +12,9 @@ Download the installer for your computer from the release’s **Assets**. Choose
 
 | Your computer | Download |
 | --- | --- |
-| Apple Silicon Mac, with an Apple M series chip | [VIVA-0.3.0-beta.1-mac-arm64.dmg](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.1/VIVA-0.3.0-beta.1-mac-arm64.dmg) |
-| Intel Mac | [VIVA-0.3.0-beta.1-mac-x64.dmg](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.1/VIVA-0.3.0-beta.1-mac-x64.dmg) |
-| Windows x64 PC | [VIVA-0.3.0-beta.1-windows-x64-setup.exe](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.1/VIVA-0.3.0-beta.1-windows-x64-setup.exe) |
+| Apple Silicon Mac, with an Apple M series chip | [VIVA-0.3.0-beta.2-mac-arm64.dmg](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.2/VIVA-0.3.0-beta.2-mac-arm64.dmg) |
+| Intel Mac | [VIVA-0.3.0-beta.2-mac-x64.dmg](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.2/VIVA-0.3.0-beta.2-mac-x64.dmg) |
+| Windows x64 PC | [VIVA-0.3.0-beta.2-windows-x64-setup.exe](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.2/VIVA-0.3.0-beta.2-windows-x64-setup.exe) |
 
 Mac requires **macOS 13 or later**. Use **Apple menu → About This Mac** to check your chip or processor. This preview does not include a Windows ARM installer. The release also provides `SHA256SUMS.txt` for checking downloaded files.
 
@@ -112,7 +112,7 @@ When asking your lead for help, include the VIVA version, your OS and chip type,
 
 ## Message to share with teammates
 
-> Please install VIVA 0.3.0-beta.1 using the installer for your computer: https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.1
+> Please install VIVA 0.3.0-beta.2 using the installer for your computer: https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.2
 >
 > Setup guide: https://github.com/yhkimslv/viva/blob/main/docs/user-guide.en.md
 >

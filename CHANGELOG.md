@@ -9,6 +9,18 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0-beta.2] — 2026-10-22
+
+### Added
+- VIVA logo assets and a shared banner for the GitHub repository and release pages
+
+### Changed
+- Desktop app, macOS Dock, Windows, and installer icons use the VIVA logo
+- English and Korean installation guides point to the branded beta.2 installers
+
+### Fixed
+- Draft release asset verification resolves the numeric release ID before checking uploads
+
 ## [0.3.0-beta.1] — 2026-10-19
 
 ### Added

@@ -2,6 +2,7 @@ import React from 'react'
 import { invokeDb } from '../../ipc'
 import { Project } from '../../types'
 import { useTerms } from '../../hooks/useTerms'
+import { VivaLogo } from '../shared/VivaLogo'
 import styles from './Sidebar.module.css'
 
 interface Props {
@@ -56,6 +57,10 @@ export function Sidebar({
   return (
     <aside className={styles.sidebar}>
       <div className={styles.header}>
+        <div className={styles.brand}>
+          <VivaLogo className={styles.brandIcon} decorative />
+          <span className={styles.brandName}>VIVA</span>
+        </div>
         <span className={styles.appTitle}>{t.sidebarTitle}</span>
       </div>
 

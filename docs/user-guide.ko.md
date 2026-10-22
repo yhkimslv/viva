@@ -1,20 +1,20 @@
 # VIVA 설치와 첫 프로젝트 사용 가이드
 
-[English](user-guide.en.md) · [설치 파일 다운로드](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.1)
+[English](user-guide.en.md) · [설치 파일 다운로드](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.2)
 
-**VIVA 0.3.0-beta.1 팀 테스트 버전**을 기준으로 macOS·Windows 설치, GitHub 연결, 저장소 clone까지 진행합니다. Clone은 GitHub 저장소와 변경 이력을 내 컴퓨터에 내려받는 작업입니다. **터미널 명령어와 Node.js·npm은 필요하지 않습니다. Git은 별도로 설치합니다.**
+**VIVA 0.3.0-beta.2 팀 테스트 버전**을 기준으로 macOS·Windows 설치, GitHub 연결, 저장소 clone까지 진행합니다. Clone은 GitHub 저장소와 변경 이력을 내 컴퓨터에 내려받는 작업입니다. **터미널 명령어와 Node.js·npm은 필요하지 않습니다. Git은 별도로 설치합니다.**
 
 진행 순서: **VIVA 설치 → Git 확인 → GitHub 로그인 → 저장소 clone → 커밋 작성자 설정 → 대시보드 확인**. 본인의 GitHub 계정과 리드가 공유한 팀 저장소 HTTPS 주소를 준비하세요. 비공개 저장소는 초대를 수락하고 접근 권한을 받아야 합니다.
 
 ## 1 설치 파일 다운로드
 
-[릴리스 페이지](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.1)의 Assets에서 내 컴퓨터에 맞는 **설치 파일**을 받습니다. `Source code` 압축 파일은 설치 파일이 아닙니다.
+[릴리스 페이지](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.2)의 Assets에서 내 컴퓨터에 맞는 **설치 파일**을 받습니다. `Source code` 압축 파일은 설치 파일이 아닙니다.
 
 | 컴퓨터 | 설치 파일 |
 | --- | --- |
-| Apple M 시리즈 Mac | [VIVA-0.3.0-beta.1-mac-arm64.dmg](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.1/VIVA-0.3.0-beta.1-mac-arm64.dmg) |
-| Intel Mac | [VIVA-0.3.0-beta.1-mac-x64.dmg](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.1/VIVA-0.3.0-beta.1-mac-x64.dmg) |
-| Windows x64 PC | [VIVA-0.3.0-beta.1-windows-x64-setup.exe](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.1/VIVA-0.3.0-beta.1-windows-x64-setup.exe) |
+| Apple M 시리즈 Mac | [VIVA-0.3.0-beta.2-mac-arm64.dmg](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.2/VIVA-0.3.0-beta.2-mac-arm64.dmg) |
+| Intel Mac | [VIVA-0.3.0-beta.2-mac-x64.dmg](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.2/VIVA-0.3.0-beta.2-mac-x64.dmg) |
+| Windows x64 PC | [VIVA-0.3.0-beta.2-windows-x64-setup.exe](https://github.com/yhkimslv/viva/releases/download/v0.3.0-beta.2/VIVA-0.3.0-beta.2-windows-x64-setup.exe) |
 
 Mac은 **Apple 메뉴 → 이 Mac에 관하여**에서 칩·프로세서를 확인합니다. macOS 13 이상이 필요합니다. 이번 릴리스에는 Windows ARM 전용 설치 파일이 없습니다.
 
@@ -33,7 +33,7 @@ Mac은 **Apple 메뉴 → 이 Mac에 관하여**에서 칩·프로세서를 확�
 
 ### Windows
 
-1. 내려받은 `VIVA-0.3.0-beta.1-windows-x64-setup.exe`를 엽니다.
+1. 내려받은 `VIVA-0.3.0-beta.2-windows-x64-setup.exe`를 엽니다.
 2. 설치 마법사에서 위치를 확인하고 설치를 완료합니다. 기본 설치는 현재 사용자용이며 관리자 권한을 요청하지 않습니다.
 3. 바탕화면 또는 시작 메뉴에서 **VIVA**를 엽니다.
 
@@ -130,4 +130,4 @@ GitHub 로그인과 커밋 작성자는 별개입니다. 이름·이메일은 �
 >
 > English: https://github.com/yhkimslv/viva/blob/main/docs/user-guide.en.md
 >
-> 설치 파일: https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.1
+> 설치 파일: https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.2

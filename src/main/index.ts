@@ -14,6 +14,9 @@ function createWindow(): void {
     minHeight: 600,
     show: false,
     autoHideMenuBar: true,
+    icon: app.isPackaged
+      ? join(process.resourcesPath, 'brand/viva-window-icon.png')
+      : join(import.meta.dirname, '../../assets/brand/viva-window-icon.png'),
     webPreferences: {
       preload: join(import.meta.dirname, '../preload/index.cjs'),
       sandbox: false

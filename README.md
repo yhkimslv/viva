@@ -1,5 +1,7 @@
 # VIVA — Visual Interface for Version Assistance
 
+![VIVA](assets/brand/viva-banner.png)
+
 [![English](https://img.shields.io/badge/lang-English-blue)](README.md)
 [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-green)](README.ko.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -45,13 +47,13 @@ No shell commands are required in the UI.
 
 ### Windows
 
-1. Download the Windows x64 `VIVA-*-windows-x64-setup.exe` from the [team preview release](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.1).
+1. Download the Windows x64 `VIVA-*-windows-x64-setup.exe` from the [team preview release](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.2).
 2. Follow the installer. It installs for the current user without administrator elevation.
 3. Launch **VIVA** from the desktop or Start menu.
 
 ### macOS
 
-1. Choose `VIVA-*-mac-arm64.dmg` for Apple Silicon or `VIVA-*-mac-x64.dmg` for Intel from the [team preview release](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.1).
+1. Choose `VIVA-*-mac-arm64.dmg` for Apple Silicon or `VIVA-*-mac-x64.dmg` for Intel from the [team preview release](https://github.com/yhkimslv/viva/releases/tag/v0.3.0-beta.2).
 2. Open the DMG and drag **VIVA** to Applications.
 3. Open VIVA from Applications. macOS 13 or later is required.
 
@@ -59,7 +61,7 @@ No shell commands are required in the UI.
 
 This team preview provides macOS and Windows installers. Linux source builds remain available through the development workflow.
 
-**Team preview:** these installers are unsigned on Windows and ad-hoc signed but not notarized on macOS. OS approval may be required; managed devices can block them. See the [installation and security notes](docs/releases/v0.3.0-beta.1.md).
+**Team preview:** these installers are unsigned on Windows and ad-hoc signed but not notarized on macOS. OS approval may be required; managed devices can block them. See the [installation and security notes](docs/releases/v0.3.0-beta.2.md).
 
 **Git is required separately.** VIVA links to the graphical Git for Windows installer and Apple's Command Line Tools download. After installation, reopen VIVA and retry its Git check. Set your commit name/email in **Project Settings**; this writes only the current project's Git configuration. Node.js, npm, and terminal commands are not required to use the installers. Development uses Node.js 24 LTS.
 

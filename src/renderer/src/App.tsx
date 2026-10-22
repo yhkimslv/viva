@@ -39,6 +39,7 @@ import { WeeklyReport } from './components/WeeklyReport'
 import { FloatingPanel } from './components/FloatingPanel/FloatingPanel'
 import { ConflictResolver } from './components/ConflictResolver/ConflictResolver'
 import { ToastContainer } from './components/shared/Toast'
+import { VivaLogo } from './components/shared/VivaLogo'
 import {
   BranchCreateResult,
   BranchDeleteResult,
@@ -775,7 +776,7 @@ function Shell(): JSX.Element {
             </>
           ) : (
             <div className={styles.emptyMain}>
-              <div className={styles.emptyIcon}>📁</div>
+              <VivaLogo className={styles.emptyIcon} />
               <h2>Welcome</h2>
               <p>
                 {preferences.mode === 'newbie'
