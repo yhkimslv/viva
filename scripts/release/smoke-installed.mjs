@@ -176,6 +176,7 @@ export async function smokeInstalled(options) {
       const bundle = target.toLowerCase().endsWith('.app')
         ? target : resolve(target, '..', '..', '..')
       assert.ok(bundle.toLowerCase().endsWith('.app'), 'Expected VIVA.app or its Contents/MacOS executable.')
+      await command('/usr/bin/codesign', ['--verify', '--deep', '--strict', bundle], join(artifactsDir, 'codesign-verify.log'))
       executable = await executableInBundle(bundle, artifactsDir)
       asarPath = join(bundle, 'Contents', 'Resources', 'app.asar')
     } else {
