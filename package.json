@@ -1,6 +1,6 @@
 {
   "name": "viva",
-  "version": "0.3.0-beta.1",
+  "version": "0.3.0-beta.2",
   "description": "VIVA — Visual Interface for Version Assistance",
   "author": "Sean Lee",
   "main": "./out/main/index.js",

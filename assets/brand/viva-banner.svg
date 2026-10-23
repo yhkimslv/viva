@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">VIVA</title>
+  <desc id="description">VIVA. Visual Interface for Version Assistance. Visual version control.</desc>
+  <defs>
+    <radialGradient id="glow" cx="0.24" cy="0.44" r="0.76">
+      <stop stop-color="#173E7F"/>
+      <stop offset="0.6" stop-color="#0B1F3D"/>
+      <stop offset="1" stop-color="#07152B"/>
+    </radialGradient>
+    <linearGradient id="blue" x1="190" y1="110" x2="850" y2="930" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="0.56" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="220" y1="96" x2="780" y2="928" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#glow)"/>
+  <g fill="none" stroke="#4E7CBC" stroke-opacity="0.12" stroke-width="2">
+    <path d="M1020 -100V115Q1020 150 985 150H940Q905 150 905 185V232"/>
+    <path d="M1150 -100V320Q1150 355 1115 355H1080Q1045 355 1045 390V740"/>
+    <circle cx="905" cy="253" r="21"/>
+    <circle cx="1150" cy="148" r="17"/>
+    <circle cx="1045" cy="510" r="17"/>
+  </g>
+  <g transform="translate(92 128) scale(0.375)">
+    <rect x="96" y="96" width="832" height="832" rx="190" fill="url(#blue)"/>
+    <rect x="98" y="98" width="828" height="828" rx="188" fill="none" stroke="url(#edge)" stroke-width="3"/>
+    <path d="M312 330 512 700 712 330" fill="none" stroke="#FFFFFF" stroke-width="94" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="312" cy="330" r="66" fill="#FFFFFF"/>
+    <circle cx="712" cy="330" r="66" fill="#FFFFFF"/>
+    <circle cx="512" cy="700" r="66" fill="#FFFFFF"/>
+    <circle cx="312" cy="330" r="25" fill="#3578EE"/>
+    <circle cx="712" cy="330" r="25" fill="#2C6BE8"/>
+    <circle cx="512" cy="700" r="25" fill="#67E8F9"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="518" y="321" fill="#F8FBFF" font-size="128" font-weight="700" letter-spacing="-5">VIVA</text>
+    <text x="523" y="376" fill="#B9CCE9" font-size="24">Visual Interface for Version Assistance</text>
+    <text x="525" y="440" fill="#67E8F9" font-size="16" font-weight="700" letter-spacing="3">VISUAL VERSION CONTROL</text>
+  </g>
+</svg>
