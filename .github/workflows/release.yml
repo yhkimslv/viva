@@ -80,6 +80,8 @@ jobs:
         if: runner.os == 'macOS'
         run: npx electron-builder --mac dmg ${{ matrix.arch }} --publish never --config.mac.identity=- --config.mac.timestamp=none
         env:
+          # Verify the same ad-hoc signing on PRs and tags, without signing credentials.
+          CSC_FOR_PULL_REQUEST: 'true'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Package Windows team preview
         if: runner.os == 'Windows'
