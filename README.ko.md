@@ -143,6 +143,8 @@ project header의 branch pill에서 다음을 할 수 있습니다.
 
 연결된 remote에 새 commit이 있으면 **Get Updates**를 사용합니다.
 
+업데이트는 이 프로젝트에 설정한 GitHub 저장소와 작업 브랜치에서만 가져옵니다.
+
 앱은 pull 전에 incoming commit을 미리 보여줍니다. Git conflict가 발생하면 앱이 conflict를 알려주며, 자동으로 해결하려고 하지 않습니다.
 
 ---
