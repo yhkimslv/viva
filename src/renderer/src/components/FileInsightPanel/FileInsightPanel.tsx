@@ -27,6 +27,7 @@ export function FileInsightPanel({
     return (
       <aside className={styles.panel}>
         <div className={styles.title}>{t.fileInsightTitle}</div>
+        {selectedPath && <div className={styles.path} title={selectedPath}>{selectedPath}</div>}
         <p className={styles.placeholder}>{t.fileInsightConnectAiHint}</p>
       </aside>
     )

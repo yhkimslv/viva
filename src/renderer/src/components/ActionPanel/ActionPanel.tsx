@@ -177,6 +177,18 @@ export function ActionPanel({
         </div>
       )}
 
+      {status && (
+        <p id="save-step-hint" className={styles.helperText}>
+          {status.files.length === 0
+            ? t.noChangesSaveHint
+            : stagedCount === 0
+              ? t.selectChangesSaveHint
+              : message.trim().length === 0 && !shouldGenerateAiDraft
+                ? t.describeChangesSaveHint
+                : t.localSaveHint}
+        </p>
+      )}
+
       <div className={styles.messageRow}>
         <textarea
           className={styles.messageInput}
@@ -186,6 +198,7 @@ export function ActionPanel({
             setHelperText(null)
           }}
           placeholder={t.commitPlaceholder(stagedCount > 0)}
+          aria-describedby={status ? 'save-step-hint' : undefined}
           rows={1}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
@@ -220,7 +233,7 @@ export function ActionPanel({
       )}
 
       <div className={styles.actions}>
-        <button className={styles.saveBtn} onClick={handleCommit} disabled={!canCommit}>
+        <button className={styles.saveBtn} onClick={handleCommit} disabled={!canCommit} aria-describedby={status ? 'save-step-hint' : undefined}>
           {loading || aiLoading || draftingAiMessage ? <Spinner size={14} /> : null}
           {loading
             ? t.committingBtn

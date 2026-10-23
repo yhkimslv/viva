@@ -14,6 +14,13 @@
   min-width: 0;
 }
 
+.guidance {
+  flex-shrink: 0;
+  max-height: 42vh;
+  overflow-y: auto;
+  padding-top: 10px;
+}
+
 .panelArea {
   padding: 16px 16px 0;
   flex-shrink: 0;
@@ -120,5 +127,11 @@
 @media (max-width: 1100px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-height: 700px) {
+  .guidance {
+    max-height: 34vh;
   }
 }

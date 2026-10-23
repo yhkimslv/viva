@@ -1,0 +1,146 @@
+.guide {
+  flex-shrink: 0;
+  min-width: 0;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  padding: 8px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker { display: none; }
+
+.hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 20px;
+  min-width: 0;
+}
+
+.hint {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  color: var(--text-muted);
+}
+
+.hint strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.hintArrow {
+  color: var(--accent);
+}
+
+.toggle {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.summary:hover .toggle {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.summary:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.content {
+  padding: 0 16px 12px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 2px 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.stepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 21px;
+  height: 21px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stepContent {
+  min-width: 0;
+}
+
+.stepHeading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 7px;
+  min-height: 21px;
+}
+
+.stepHeading strong {
+  font-weight: 600;
+}
+
+.stepHeading code {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.stepContent p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+
+.localNote {
+  margin: 0;
+  padding: 7px 10px;
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+}
+
+@media (max-width: 980px) {
+  .steps {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .stepContent p {
+    margin-top: 1px;
+  }
+
+}

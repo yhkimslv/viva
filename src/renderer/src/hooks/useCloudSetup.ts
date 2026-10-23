@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { validateBranchName } from '../branchValidation'
 import { AppTerms } from '../i18n/terms'
 import { invokeDb } from '../ipc'
@@ -99,10 +99,22 @@ export function useCloudSetup(
   options: UseCloudSetupOptions = {}
 ) {
   const t = useTerms()
+  const projectId = project?.project_id ?? null
+  const activeProjectRef = useRef({ projectId })
+  if (activeProjectRef.current.projectId !== projectId) {
+    activeProjectRef.current = { projectId }
+  }
+  const projectScope = activeProjectRef.current
+  const targetRequestRef = useRef(0)
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [target, setTarget] = useState<ProjectCloudTarget>(emptyTarget)
+  const [ownedTarget, setOwnedTarget] = useState<{
+    projectId: string | null
+    value: ProjectCloudTarget
+  }>({ projectId: null, value: emptyTarget })
+  // Do not expose the previous project's target while the next request loads.
+  const target = ownedTarget.projectId === projectId ? ownedTarget.value : emptyTarget
   const [remotes, setRemotes] = useState<ProjectRemote[]>([])
   const [intent, setIntent] = useState<CloudSetupIntent | null>(null)
   const [branchMode, setBranchMode] = useState<CollaborationBranchMode>('new_branch')
@@ -111,20 +123,45 @@ export function useCloudSetup(
   const [pendingUpload, setPendingUpload] = useState(false)
 
   const refreshTarget = useCallback(async () => {
-    if (!project) {
-      setTarget(emptyTarget)
+    if (activeProjectRef.current !== projectScope) return
+    const requestId = ++targetRequestRef.current
+    const isCurrentRequest = (): boolean =>
+      activeProjectRef.current === projectScope && targetRequestRef.current === requestId
+
+    if (!projectScope.projectId) {
+      setOwnedTarget({ projectId: null, value: emptyTarget })
       return
     }
 
-    const nextTarget = await invokeDb<ProjectCloudTarget>('cloud:target:get', project.project_id)
-    setTarget(nextTarget)
-  }, [project])
+    try {
+      const nextTarget = await invokeDb<ProjectCloudTarget>('cloud:target:get', projectScope.projectId)
+      if (isCurrentRequest()) {
+        setOwnedTarget({ projectId: projectScope.projectId, value: nextTarget })
+      }
+    } catch (caughtError) {
+      if (isCurrentRequest()) {
+        setOwnedTarget({ projectId: projectScope.projectId, value: emptyTarget })
+      }
+      throw caughtError
+    }
+  }, [projectScope])
 
   useEffect(() => {
-    refreshTarget().catch(() => {
-      setTarget(emptyTarget)
-    })
+    setIsOpen(false)
+    setPendingUpload(false)
+    setLoading(false)
+    setError(null)
+    refreshTarget().catch(() => undefined)
+    return () => { targetRequestRef.current += 1 }
   }, [refreshTarget])
+
+  const applyMutatedTarget = useCallback((nextTarget: ProjectCloudTarget): boolean => {
+    if (activeProjectRef.current !== projectScope) return false
+    // A read started before/during setup must not overwrite its saved result.
+    targetRequestRef.current += 1
+    setOwnedTarget({ projectId: projectScope.projectId, value: nextTarget })
+    return true
+  }, [projectScope])
 
   const resetWizardState = useCallback(() => {
     setError(null)
@@ -142,7 +179,7 @@ export function useCloudSetup(
   }, [resetWizardState])
 
   const open = useCallback(async (startUpload = false) => {
-    if (!project) {
+    if (!project || activeProjectRef.current !== projectScope) {
       return
     }
 
@@ -153,14 +190,17 @@ export function useCloudSetup(
 
     try {
       const inspection = await invokeDb<ProjectFolderInspection>('project-setup:inspect', project.local_path)
+      if (activeProjectRef.current !== projectScope) return
       setRemotes(inspection.remotes)
       setSelectedRemoteName(inspection.remotes[0]?.name ?? '')
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, 'Could not inspect remotes for this project.'))
+      if (activeProjectRef.current === projectScope) {
+        setError(getErrorMessage(caughtError, 'Could not inspect remotes for this project.'))
+      }
     } finally {
-      setLoading(false)
+      if (activeProjectRef.current === projectScope) setLoading(false)
     }
-  }, [project, resetWizardState])
+  }, [project, projectScope, resetWizardState])
 
   const chooseIntent = useCallback((nextIntent: CloudSetupIntent) => {
     setIntent(nextIntent)
@@ -186,7 +226,7 @@ export function useCloudSetup(
   }, [project])
 
   const createBackup = useCallback(async () => {
-    if (!project) return
+    if (!project || activeProjectRef.current !== projectScope) return
 
     setLoading(true)
     setError(null)
@@ -198,21 +238,23 @@ export function useCloudSetup(
         getBackupRepoName(project)
       )
 
-      setTarget(nextTarget)
+      if (!applyMutatedTarget(nextTarget)) return
       close()
 
       if (pendingUpload) {
         Promise.resolve(options.onReadyToUpload?.(nextTarget)).catch(() => undefined)
       }
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, 'Could not create the private backup repository.'))
+      if (activeProjectRef.current === projectScope) {
+        setError(getErrorMessage(caughtError, 'Could not create the private backup repository.'))
+      }
     } finally {
-      setLoading(false)
+      if (activeProjectRef.current === projectScope) setLoading(false)
     }
-  }, [close, options, pendingUpload, project])
+  }, [applyMutatedTarget, close, options, pendingUpload, project, projectScope])
 
   const saveCollaborationTarget = useCallback(async () => {
-    if (!project) return
+    if (!project || activeProjectRef.current !== projectScope) return
 
     const selectedRemote = remotes.find((remote) => remote.name === selectedRemoteName)
     if (!selectedRemote) {
@@ -246,23 +288,27 @@ export function useCloudSetup(
         selectedBranch: selectedBranch.trim()
       })
 
-      setTarget(nextTarget)
+      if (!applyMutatedTarget(nextTarget)) return
       close()
 
       if (pendingUpload) {
         Promise.resolve(options.onReadyToUpload?.(nextTarget)).catch(() => undefined)
       }
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, 'Could not save the team upload target.'))
+      if (activeProjectRef.current === projectScope) {
+        setError(getErrorMessage(caughtError, 'Could not save the team upload target.'))
+      }
     } finally {
-      setLoading(false)
+      if (activeProjectRef.current === projectScope) setLoading(false)
     }
   }, [
+    applyMutatedTarget,
     branchMode,
     close,
     options,
     pendingUpload,
     project,
+    projectScope,
     remotes,
     selectedBranch,
     selectedRemoteName

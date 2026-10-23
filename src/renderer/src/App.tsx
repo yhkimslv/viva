@@ -13,6 +13,7 @@ import { useGitActions } from './hooks/useGitActions'
 import { usePreferences } from './hooks/usePreferences'
 import { useProjectAiSettings } from './hooks/useProjectAiSettings'
 import { useProjectLinkWizard } from './hooks/useProjectLinkWizard'
+import { useRepositoryConnection } from './hooks/useRepositoryConnection'
 import { useProjects } from './hooks/useProjects'
 import { useNaturalUndo } from './hooks/useNaturalUndo'
 import { usePullUpdates } from './hooks/usePullUpdates'
@@ -34,8 +35,10 @@ import { NotARepo } from './components/NotARepo/NotARepo'
 import { ProjectLinkWizard } from './components/ProjectLinkWizard/ProjectLinkWizard'
 import { ProjectSettingsPanel } from './components/ProjectSettingsPanel/ProjectSettingsPanel'
 import { PullUpdatesDialog } from './components/PullUpdatesDialog/PullUpdatesDialog'
+import { RepositoryConnection } from './components/RepositoryConnection/RepositoryConnection'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { WeeklyReport } from './components/WeeklyReport'
+import { WorkflowGuide } from './components/WorkflowGuide/WorkflowGuide'
 import { FloatingPanel } from './components/FloatingPanel/FloatingPanel'
 import { ConflictResolver } from './components/ConflictResolver/ConflictResolver'
 import { ToastContainer } from './components/shared/Toast'
@@ -196,6 +199,7 @@ function Shell(): JSX.Element {
     },
     onPushSuccess: () => {
       fetchStatus()
+      void repositoryConnection.refresh()
       addToast(t.pushedToast, 'success')
     },
     onPullSuccess: () => {
@@ -260,6 +264,10 @@ function Shell(): JSX.Element {
   const cloudSetup = useCloudSetup(activeProject, {
     onReadyToUpload: handleUploadWithTarget
   })
+  const repositoryConnection = useRepositoryConnection(
+    activeProject,
+    JSON.stringify(cloudSetup.target)
+  )
 
   const pullUpdates = usePullUpdates({
     activeProjectId,
@@ -441,6 +449,7 @@ function Shell(): JSX.Element {
     await invokeGit('git:init', activeProjectId)
     await fetchStatus()
     await fetchBranches()
+    await repositoryConnection.refresh()
     addToast('Repository initialized', 'success')
   }
 
@@ -682,6 +691,28 @@ function Shell(): JSX.Element {
                   </span>
                 )}
               </header>
+
+              <div className={styles.guidance}>
+                <RepositoryConnection
+                  language={preferences.language ?? 'en'}
+                  inspection={repositoryConnection.inspection}
+                  loading={repositoryConnection.loading}
+                  error={repositoryConnection.error}
+                  cloudTarget={cloudSetup.target}
+                  accountConnected={tokenExists === true}
+                  uploadReady={cloudSetup.cloudUploadReady}
+                  onSetup={() => { void cloudSetup.open(false) }}
+                  onConnectAccount={() => setShowGitHubPanel(true)}
+                  onRetry={() => { void repositoryConnection.refresh() }}
+                />
+
+                {!showLeadDashboard && !showWeeklyReport && !isNotARepo && (
+                  <WorkflowGuide
+                    key={activeProjectId}
+                    language={preferences.language ?? 'en'}
+                  />
+                )}
+              </div>
 
               {showLeadDashboard ? (
                 <LeadDashboard

@@ -1,0 +1,35 @@
+export function getRepositoryConnectionTerms(language: 'en' | 'ko') {
+  const ko = language === 'ko'
+  return {
+    regionLabel: ko ? '이 폴더의 GitHub 연결 상태' : 'GitHub connection for this folder',
+    checking: ko ? 'GitHub 연결 확인 중…' : 'Checking GitHub connection…',
+    checkFailed: ko ? 'GitHub 연결 상태를 확인하지 못했어요' : 'Could not check the GitHub connection',
+    checkFailedDescription: ko ? '폴더에 접근할 수 있는지 확인한 뒤 다시 확인하세요.' : 'Check that the folder is accessible, then try again.',
+    noGit: ko ? 'Git 저장소가 아닌 폴더예요' : 'This folder is not a Git repository',
+    noGitDescription: ko ? 'Git 기록과 GitHub 연결이 없습니다. Git을 설정하거나, .git이 있는 실제 프로젝트 폴더를 선택하세요.' : 'This folder has no Git history or GitHub connection. Set up Git, or select the actual project folder containing .git.',
+    localOnly: ko ? 'GitHub 미연결 · 내 컴퓨터에만 저장' : 'GitHub not linked · saved on this computer only',
+    localOnlyDescription: ko ? '진행 상황 저장(commit)은 이 컴퓨터에 기록만 남깁니다. GitHub에도 보관하려면 올릴 위치를 설정하고 올리기(push)를 실행하세요.' : 'Save Progress (commit) records changes on this computer. To keep them on GitHub too, choose an upload destination and use Upload (push).',
+    otherRemote: ko ? 'GitHub 미연결' : 'GitHub not linked',
+    otherRemoteDescription: ko ? '다른 원격 저장소 주소가 있지만 GitHub 주소는 없습니다. GitHub에 올리려면 올릴 위치를 설정하세요.' : 'A different remote is configured, but there is no GitHub address. Choose a destination to upload to GitHub.',
+    targetUnset: ko ? 'GitHub 주소 있음 · 올릴 위치 선택 필요' : 'GitHub address found · choose an upload destination',
+    targetUnsetDescription: ko ? '폴더에 GitHub 주소가 있습니다. VIVA에서 사용할 저장소와 작업줄(branch)을 선택해야 올릴 수 있어요.' : 'This folder has a GitHub address. Choose the repository and branch VIVA should use for uploads.',
+    accountMissing: ko ? 'GitHub 로그인 필요' : 'GitHub sign-in needed',
+    accountMissingDescription: ko ? '폴더의 GitHub 주소와 계정 로그인은 별개예요. VIVA에서 올리려면 GitHub 계정을 연결하세요.' : 'The folder’s GitHub address and your account sign-in are separate. Connect your GitHub account to upload from VIVA.',
+    accountMissingNoTarget: ko ? '폴더에 GitHub 주소가 있습니다. GitHub 계정을 연결한 뒤, 올릴 저장소와 작업줄을 선택하세요.' : 'This folder has a GitHub address. Connect your GitHub account, then choose an upload repository and branch.',
+    configured: ko ? 'GitHub 올릴 위치 설정됨' : 'GitHub upload destination configured',
+    configuredDescription: ko ? '아래 저장소·작업줄로 올리도록 설정돼 있습니다. 실제 전송은 올리기(push)를 눌러야 실행돼요.' : 'Uploads are configured for the repository and branch below. Use Upload (push) to send your saved changes.',
+    backupConfigured: ko ? '개인 백업 위치 설정됨' : 'Private backup destination configured',
+    backupDescription: ko ? '아래 개인 저장소로 현재 작업줄을 올리도록 설정돼 있습니다. 실제 전송은 올리기(push)를 눌러야 실행돼요.' : 'Uploads are configured to send the current branch to the private repository below. Use Upload (push) to send your saved changes.',
+    backupPendingDescription: ko ? '아직 이 폴더에 백업용 GitHub 주소가 없습니다. 올리기(push)를 실행하면 지정한 백업 저장소에 연결해 전송합니다.' : 'This folder has no backup GitHub address yet. Upload (push) will connect the configured backup repository and send your saved changes.',
+    backupAccountMissing: ko ? '개인 백업 위치는 설정돼 있습니다. VIVA에서 올리려면 GitHub 계정을 연결하세요.' : 'A private backup destination is configured. Connect your GitHub account to upload from VIVA.',
+    remoteMismatch: ko ? 'GitHub 올릴 주소 확인 필요' : 'Check the GitHub upload address',
+    remoteMismatchDescription: ko ? '가져오는 주소(fetch), 올리는 주소(push), 저장된 올릴 위치가 일치하지 않거나 주소가 사라졌습니다. 올리기 전에 위치를 다시 선택하세요.' : 'The fetch address, push address, or saved upload destination differs or is missing. Review the destination before uploading.',
+    configurationOnly: ko ? '주소와 설정만 확인했습니다. 인터넷 연결·저장소 접근 권한은 올릴 때 확인합니다.' : 'Only addresses and settings were checked. Network access and repository permissions are checked when uploading.',
+    setup: ko ? '올릴 위치 설정' : 'Set upload destination',
+    reviewSetup: ko ? '올릴 위치 다시 확인' : 'Review upload destination',
+    connect: ko ? 'GitHub 계정 연결' : 'Connect GitHub account',
+    retry: ko ? '다시 확인' : 'Check again',
+    currentBranch: ko ? '현재 작업줄(branch)' : 'Current branch',
+    branch: ko ? '작업줄' : 'Branch'
+  }
+}

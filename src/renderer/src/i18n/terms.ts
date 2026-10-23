@@ -47,6 +47,10 @@ export interface AppTerms {
   pullBtn: string
   pushTitle: string
   pullTitle: string
+  selectChangesSaveHint: string
+  describeChangesSaveHint: string
+  localSaveHint: string
+  noChangesSaveHint: string
 
   filesStaged: (n: number) => string
   toPush: (n: number) => string
@@ -423,6 +427,10 @@ function formatKoreanGitError(code: string, fallback: string): string {
 }
 
 const EN_COMMON_APP_TERMS = {
+  selectChangesSaveHint: 'Check files to save (add).',
+  describeChangesSaveHint: 'Describe your changes to save.',
+  localSaveHint: 'Saves locally. Use Upload (push) to send to GitHub.',
+  noChangesSaveHint: 'No changes to save.',
   projectSettingsTitle: 'Project Settings',
   projectSettingsDescription: 'Review AI save-message options and cloud upload status for this project.',
   closeProjectSettingsLabel: 'Close project settings',
@@ -607,6 +615,10 @@ const EN_COMMON_APP_TERMS = {
 }
 
 const KO_COMMON_APP_TERMS = {
+  selectChangesSaveHint: '저장할 파일을 체크하세요 (add).',
+  describeChangesSaveHint: '변경 내용을 적으면 저장할 수 있어요.',
+  localSaveHint: '내 컴퓨터에 저장돼요. GitHub 전송은 올리기(push).',
+  noChangesSaveHint: '변경사항이 없어요.',
   projectSettingsTitle: '프로젝트 설정',
   projectSettingsDescription: '이 프로젝트의 AI 저장 메시지와 클라우드 업로드 상태를 확인합니다.',
   closeProjectSettingsLabel: '프로젝트 설정 닫기',
