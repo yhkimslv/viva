@@ -97,7 +97,8 @@ main panel은 tracked file과 현재 변경사항을 함께 보여줍니다.
 
 **Show deps** / **Hide deps**로 `node_modules`, build output 같은 dependency/generated 폴더를 펼치거나 숨길 수 있습니다.
 
-저장할 파일을 stage하고, 메시지를 작성한 뒤 **Save Progress**를 클릭합니다.
+저장할 파일의 **체크박스**를 선택(stage)하고, 메시지를 작성한 뒤 **진행 상황 저장(Save Progress)**을 클릭합니다.
+파일 이름을 클릭해도 저장할 파일로 선택되지는 않습니다.
 
 **AI Suggest**를 누르면 staged diff를 기준으로 commit message 초안을 만들 수 있습니다. AI provider가 연결되어 있지 않거나 staged diff가 없으면, 앱은 숨겨진 key나 환경변수를 쓰지 않고 명확한 오류를 보여줍니다.
 
